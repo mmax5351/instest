@@ -327,18 +327,24 @@ async function automateInstagramLogin(username, password) {
     // Wait for navigation or error message
     console.log('Waiting for response...');
     
-    // Wait for either navigation or error message
+    // Wait for either navigation or error message with better error handling
     try {
       await Promise.race([
-        page.waitForNavigation({ waitUntil: 'networkidle', timeout: 10000 }),
-        page.waitForSelector('div[role="alert"], #slfErrorAlert, p[role="alert"]', { timeout: 10000 })
+        page.waitForNavigation({ waitUntil: 'networkidle', timeout: 15000 }).catch(() => {}),
+        page.waitForSelector('div[role="alert"], #slfErrorAlert, p[role="alert"]', { timeout: 15000 }).catch(() => {}),
+        page.waitForTimeout(5000) // Fallback timeout
       ]);
     } catch (e) {
-      // If neither happens, just wait a bit
-      console.log('Waiting for page response...');
+      console.log('Navigation wait completed or timed out');
     }
     
+    // Additional wait to ensure page is stable
     await page.waitForTimeout(2000);
+    
+    // Check if page/browser is still open
+    if (page.isClosed()) {
+      throw new Error('Page was closed unexpectedly');
+    }
     
     // Check for "Can't find account" modal/popup
     const accountNotFoundSelectors = [
@@ -402,23 +408,34 @@ async function automateInstagramLogin(username, password) {
       }
     }
     
-    // Get current URL to check if login was successful
-    const currentUrl = page.url();
-    const isLoginPage = currentUrl.includes('/accounts/login');
+    // Check if page is still open before getting URL
+    let currentUrl = '';
+    let isLoginPage = true;
+    let feedIndicators = null;
     
-    // Additional check: look for Instagram feed indicators
-    const feedIndicators = await page.$('a[href="/"]');
-    const hasFeed = feedIndicators !== null;
+    try {
+      if (!page.isClosed()) {
+        currentUrl = page.url();
+        isLoginPage = currentUrl.includes('/accounts/login');
+        
+        // Additional check: look for Instagram feed indicators
+        feedIndicators = await page.$('a[href="/"]').catch(() => null);
+      } else {
+        console.log('Page was closed, cannot check URL');
+      }
+    } catch (e) {
+      console.log('Error checking page state:', e.message);
+    }
     
     // If we found "Can't find account" error, it's definitely a failed login
-    const isSuccess = !isLoginPage && !errorMessage && !accountNotFoundError;
+    const isSuccess = !isLoginPage && !errorMessage && !accountNotFoundError && currentUrl !== '';
     
     console.log(`Login ${isSuccess ? 'successful' : 'failed'}`);
-    console.log('Current URL:', currentUrl);
+    console.log('Current URL:', currentUrl || 'N/A');
     
     return {
       success: isSuccess,
-      url: currentUrl,
+      url: currentUrl || 'N/A',
       error: errorMessage,
       message: isSuccess 
         ? 'Login successful! Redirected to Instagram.' 
@@ -427,14 +444,33 @@ async function automateInstagramLogin(username, password) {
     
   } catch (error) {
     console.error('Playwright automation error:', error);
+    
+    // Check if error is about browser/page being closed
+    const errorMsg = error.message || '';
+    if (errorMsg.includes('closed') || errorMsg.includes('Target closed')) {
+      return {
+        success: false,
+        error: 'Browser or page was closed unexpectedly. This may happen if Instagram blocks the automation or the connection times out.',
+        message: 'Automation failed: Browser closed unexpectedly. Instagram may be blocking automated access.'
+      };
+    }
+    
     return {
       success: false,
       error: error.message,
       message: `Automation failed: ${error.message}`
     };
   } finally {
+    // Only close browser if it's still open
     if (browser) {
-      await browser.close();
+      try {
+        const contexts = browser.contexts();
+        if (contexts.length > 0) {
+          await browser.close();
+        }
+      } catch (e) {
+        console.log('Browser already closed or error closing:', e.message);
+      }
     }
   }
 }
