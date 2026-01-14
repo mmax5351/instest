@@ -162,7 +162,7 @@ async function automateInstagramLogin(username, password) {
         });
         navigationSuccess = true;
       } catch (finalError) {
-        const errorMsg = `Failed to navigate to Instagram. This usually means Instagram is blocking automated access. Error: ${lastError?.message || finalError.message}`;
+        const errorMsg = `Instagram may be blocking automated access. Failed to navigate to Instagram. Error: ${lastError?.message || finalError.message}`;
         console.error(errorMsg);
         throw new Error(errorMsg);
       }
@@ -445,13 +445,30 @@ async function automateInstagramLogin(username, password) {
   } catch (error) {
     console.error('Playwright automation error:', error);
     
-    // Check if error is about browser/page being closed
     const errorMsg = error.message || '';
+    
+    // Check if error is about browser/page being closed
     if (errorMsg.includes('closed') || errorMsg.includes('Target closed')) {
       return {
         success: false,
         error: 'Browser or page was closed unexpectedly. This may happen if Instagram blocks the automation or the connection times out.',
-        message: 'Automation failed: Browser closed unexpectedly. Instagram may be blocking automated access.'
+        message: 'Instagram may be blocking automated access. Browser closed unexpectedly during automation.'
+      };
+    }
+    
+    // Check if error is related to Instagram blocking
+    const isInstagramBlocking = errorMsg.includes('blocking') || 
+                                errorMsg.includes('blocked') ||
+                                errorMsg.includes('challenge') ||
+                                errorMsg.includes('unusual activity') ||
+                                errorMsg.includes('ERR_HTTP_RESPONSE_CODE_FAILURE') ||
+                                errorMsg.includes('net::ERR');
+    
+    if (isInstagramBlocking) {
+      return {
+        success: false,
+        error: 'Instagram may be blocking automated access. This is common when Instagram detects automation attempts.',
+        message: 'Instagram may be blocking automated access. The login attempt was recorded but could not be completed automatically.'
       };
     }
     
