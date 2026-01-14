@@ -317,8 +317,19 @@ function App() {
       console.log("Calling automation API...");
       // Call your backend automation service
       // Use environment variable or default to localhost for development
+      // For production/real device, set REACT_APP_API_URL to your Railway server URL
+      // Example: REACT_APP_API_URL=https://your-app.railway.app
       const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3001";
       console.log("API URL:", API_URL);
+      console.log("Environment:", process.env.NODE_ENV);
+      console.log("Current hostname:", window.location.hostname);
+      
+      // If API_URL is still localhost and we're not in development, warn the user
+      if (API_URL.includes('localhost') && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+        console.warn("⚠️ Using localhost API URL on a real device. This won't work!");
+        console.warn("Please set REACT_APP_API_URL environment variable to your Railway server URL");
+        alert("⚠️ Configuration Error: The app is trying to connect to localhost, which won't work on a real device.\n\nPlease deploy the React app to Vercel/Netlify with REACT_APP_API_URL set to your Railway server URL.\n\nSee DEPLOY_REACT_APP.md for instructions.");
+      }
 
       const response = await fetch(`${API_URL}/api/automate-login`, {
         method: "POST",
@@ -409,7 +420,7 @@ function App() {
         console.log("=== LOGIN FAILED ===");
         console.log("Message:", result.message);
         console.log("Error:", result.error);
-        
+
         // Show appropriate alert based on blocking detection
         if (isInstagramBlockingFromResult) {
           alert(
