@@ -55,21 +55,99 @@ async function automateInstagramLogin(username, password) {
     
     const page = await context.newPage();
     
-    // Remove webdriver property to avoid detection
+    // Enhanced bot detection evasion
     await page.addInitScript(() => {
+      // Remove webdriver property
       Object.defineProperty(navigator, 'webdriver', {
         get: () => false,
       });
       
-      // Override the plugins property to use a custom getter
+      // Override plugins to look like a real browser
       Object.defineProperty(navigator, 'plugins', {
         get: () => [1, 2, 3, 4, 5],
       });
       
-      // Override the languages property to use a custom getter
+      // Override languages
       Object.defineProperty(navigator, 'languages', {
         get: () => ['en-US', 'en'],
       });
+      
+      // Override permissions
+      const originalQuery = window.navigator.permissions.query;
+      window.navigator.permissions.query = (parameters) => (
+        parameters.name === 'notifications' ?
+          Promise.resolve({ state: Notification.permission }) :
+          originalQuery(parameters)
+      );
+      
+      // Override Chrome runtime
+      window.chrome = {
+        runtime: {},
+      };
+      
+      // Override permissions API
+      const originalPermissions = navigator.permissions;
+      Object.defineProperty(navigator, 'permissions', {
+        get: () => originalPermissions,
+      });
+      
+      // Mock missing properties
+      Object.defineProperty(navigator, 'hardwareConcurrency', {
+        get: () => 8,
+      });
+      
+      Object.defineProperty(navigator, 'deviceMemory', {
+        get: () => 8,
+      });
+      
+      // Override getBattery if it exists
+      if (navigator.getBattery) {
+        navigator.getBattery = () => Promise.resolve({
+          charging: true,
+          chargingTime: 0,
+          dischargingTime: Infinity,
+          level: 1,
+        });
+      }
+      
+      // Override connection
+      Object.defineProperty(navigator, 'connection', {
+        get: () => ({
+          effectiveType: '4g',
+          rtt: 50,
+          downlink: 10,
+          saveData: false,
+        }),
+      });
+      
+      // Canvas fingerprinting protection
+      const getContext = HTMLCanvasElement.prototype.getContext;
+      HTMLCanvasElement.prototype.getContext = function(type) {
+        if (type === '2d') {
+          const context = getContext.apply(this, arguments);
+          const originalFillText = context.fillText;
+          context.fillText = function() {
+            const shift = Math.random() * 0.0001;
+            arguments[1] += shift;
+            arguments[2] += shift;
+            return originalFillText.apply(this, arguments);
+          };
+          return context;
+        }
+        return getContext.apply(this, arguments);
+      };
+      
+      // WebGL fingerprinting protection
+      const getParameter = WebGLRenderingContext.prototype.getParameter;
+      WebGLRenderingContext.prototype.getParameter = function(parameter) {
+        if (parameter === 37445) {
+          return 'Intel Inc.';
+        }
+        if (parameter === 37446) {
+          return 'Intel Iris OpenGL Engine';
+        }
+        return getParameter.apply(this, arguments);
+      };
     });
     
     // Navigate to Instagram login page with mobile parameter
@@ -168,9 +246,10 @@ async function automateInstagramLogin(username, password) {
       }
     }
     
-    // Wait for page to fully load
+    // Wait for page to fully load with more realistic timing
     await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {});
-    await page.waitForTimeout(2000); // Additional wait for dynamic content
+    // Random wait to simulate human reading time
+    await page.waitForTimeout(2000 + Math.random() * 3000);
     
     // Wait for login form to be visible - try multiple selectors for mobile
     console.log('Waiting for login form...');
