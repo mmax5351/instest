@@ -6,9 +6,16 @@ async function automateInstagramLogin(username, password) {
   try {
     // Launch browser (headless: true for production/deployment)
     const isProduction = process.env.NODE_ENV === 'production';
+    
+    // Set Playwright browser path explicitly for Railway
+    const playwright = require('playwright');
+    const browserPath = playwright.chromium.executablePath();
+    console.log('Playwright browser path:', browserPath);
+    
     browser = await chromium.launch({ 
       headless: isProduction ? true : false, // Headless in production
       slowMo: isProduction ? 0 : 500, // No slowMo in production
+      executablePath: browserPath, // Explicitly set browser path
       args: [
         '--disable-blink-features=AutomationControlled',
         '--disable-dev-shm-usage',
