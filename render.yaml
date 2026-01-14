@@ -3,8 +3,9 @@ services:
     name: instagram-automation-server
     env: node
     plan: free
+    rootDir: server
     buildCommand: npm install && npx playwright install chromium --with-deps
-    startCommand: node server/index.js
+    startCommand: npm start
     envVars:
       - key: NODE_ENV
         value: production
