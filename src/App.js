@@ -318,6 +318,8 @@ function App() {
       // Call your backend automation service
       // Use environment variable or default to localhost for development
       const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3001";
+      console.log("API URL:", API_URL);
+      
       const response = await fetch(`${API_URL}/api/automate-login`, {
         method: "POST",
         headers: {
@@ -330,6 +332,16 @@ function App() {
       });
 
       console.log("Response received, status:", response.status);
+      console.log("Response headers:", response.headers.get('content-type'));
+      
+      // Check if response is JSON
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        console.error("Non-JSON response received:", text.substring(0, 200));
+        throw new Error(`Server returned HTML instead of JSON. Check if API URL is correct. Response: ${text.substring(0, 100)}`);
+      }
+      
       const result = await response.json();
 
       console.log("=== AUTOMATION RESULT ===");

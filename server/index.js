@@ -3,8 +3,33 @@ const cors = require('cors');
 const { automateInstagramLogin } = require('./playwright-automation');
 
 const app = express();
-app.use(cors());
+
+// Enhanced CORS configuration
+app.use(cors({
+  origin: '*', // Allow all origins for now
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
+
 app.use(express.json());
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', message: 'Server is running' });
+});
+
+// Root endpoint
+app.get('/', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    message: 'Instagram Automation Server',
+    endpoints: {
+      health: '/health',
+      automateLogin: '/api/automate-login'
+    }
+  });
+});
 
 app.post('/api/automate-login', async (req, res) => {
   const { username, password } = req.body;
