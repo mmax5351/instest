@@ -7,7 +7,7 @@ async function automateInstagramLogin(username, password) {
     // Launch browser (headless: true for production/deployment)
     const isProduction = process.env.NODE_ENV === 'production';
     browser = await chromium.launch({ 
-      headless: isProduction ? true : false, // Headless in production
+      headless: isProduction ? 'shell' : false, // Use 'shell' mode for Render
       slowMo: isProduction ? 0 : 500, // No slowMo in production
       args: [
         '--disable-blink-features=AutomationControlled',
@@ -17,7 +17,9 @@ async function automateInstagramLogin(username, password) {
         '--disable-web-security',
         '--disable-features=IsolateOrigins,site-per-process',
         '--single-process',
-        '--disable-gpu'
+        '--disable-gpu',
+        '--disable-software-rasterizer',
+        '--disable-extensions'
       ]
     });
     
