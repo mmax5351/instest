@@ -15,7 +15,9 @@ async function automateInstagramLogin(username, password) {
         '--no-sandbox',
         '--disable-setuid-sandbox',
         '--disable-web-security',
-        '--disable-features=IsolateOrigins,site-per-process'
+        '--disable-features=IsolateOrigins,site-per-process',
+        '--single-process',
+        '--disable-gpu'
       ]
     });
     
