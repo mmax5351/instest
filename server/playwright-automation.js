@@ -322,20 +322,46 @@ async function automateInstagramLogin(username, password) {
       throw new Error('Could not find password input field on page');
     }
     
-    // Fill in credentials using the found fields
+    // Fill in credentials using the found fields with more human-like behavior
     console.log('Filling credentials...');
     
-    // Clear and fill username
-    await usernameField.click();
-    await usernameField.fill('');
-    await usernameField.type(username, { delay: 100 });
-    await page.waitForTimeout(300);
+    // Add random mouse movement before typing
+    await page.mouse.move(
+      Math.random() * 100 + 100,
+      Math.random() * 100 + 100
+    );
+    await page.waitForTimeout(200 + Math.random() * 300);
     
-    // Clear and fill password
-    await passwordField.click();
+    // Clear and fill username with more realistic typing
+    await usernameField.click({ delay: 50 + Math.random() * 50 });
+    await page.waitForTimeout(100 + Math.random() * 200);
+    await usernameField.fill('');
+    await page.waitForTimeout(100);
+    
+    // Type username character by character with variable delays
+    for (const char of username) {
+      await usernameField.type(char, { delay: 80 + Math.random() * 120 });
+    }
+    await page.waitForTimeout(300 + Math.random() * 400);
+    
+    // Add small mouse movement
+    await page.mouse.move(
+      Math.random() * 50 + 50,
+      Math.random() * 50 + 50
+    );
+    await page.waitForTimeout(200 + Math.random() * 300);
+    
+    // Clear and fill password with more realistic typing
+    await passwordField.click({ delay: 50 + Math.random() * 50 });
+    await page.waitForTimeout(100 + Math.random() * 200);
     await passwordField.fill('');
-    await passwordField.type(password, { delay: 100 });
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(100);
+    
+    // Type password character by character with variable delays
+    for (const char of password) {
+      await passwordField.type(char, { delay: 80 + Math.random() * 120 });
+    }
+    await page.waitForTimeout(500 + Math.random() * 500);
     
     // Trigger input events to ensure React/form validation detects the changes
     await usernameField.evaluate(el => {
@@ -393,14 +419,24 @@ async function automateInstagramLogin(username, password) {
       await page.waitForTimeout(2000);
     }
     
-    // Try to click the button
+    // Try to click the button with human-like behavior
     try {
-      await submitButton.click({ timeout: 5000 });
+      // Move mouse to button first
+      const box = await submitButton.boundingBox();
+      if (box) {
+        await page.mouse.move(
+          box.x + box.width / 2 + (Math.random() - 0.5) * 10,
+          box.y + box.height / 2 + (Math.random() - 0.5) * 10,
+          { steps: 5 + Math.floor(Math.random() * 5) }
+        );
+        await page.waitForTimeout(100 + Math.random() * 200);
+      }
+      await submitButton.click({ timeout: 5000, delay: 50 + Math.random() * 100 });
       console.log('Login button clicked successfully');
     } catch (e) {
       // If click fails, try force click
       console.log('Normal click failed, trying force click...');
-      await submitButton.click({ force: true });
+      await submitButton.click({ force: true, delay: 50 + Math.random() * 100 });
     }
     
     // Wait for navigation or error message
