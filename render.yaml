@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: instagram-automation-server
+    env: node
+    plan: free
+    buildCommand: npm install && npx playwright install chromium --with-deps
+    startCommand: node server/index.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
