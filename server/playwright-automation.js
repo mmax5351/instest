@@ -23,10 +23,42 @@ async function automateInstagramLogin(username, password) {
         '--disable-setuid-sandbox',
         '--disable-web-security',
         '--disable-features=IsolateOrigins,site-per-process',
-        '--single-process',
         '--disable-gpu',
         '--disable-software-rasterizer',
-        '--disable-extensions'
+        '--disable-extensions',
+        '--disable-background-networking',
+        '--disable-background-timer-throttling',
+        '--disable-backgrounding-occluded-windows',
+        '--disable-breakpad',
+        '--disable-client-side-phishing-detection',
+        '--disable-component-update',
+        '--disable-default-apps',
+        '--disable-domain-reliability',
+        '--disable-features=AudioServiceOutOfProcess',
+        '--disable-hang-monitor',
+        '--disable-ipc-flooding-protection',
+        '--disable-notifications',
+        '--disable-offer-store-unmasked-wallet-cards',
+        '--disable-popup-blocking',
+        '--disable-print-preview',
+        '--disable-prompt-on-repost',
+        '--disable-renderer-backgrounding',
+        '--disable-setuid-sandbox',
+        '--disable-speech-api',
+        '--disable-sync',
+        '--disable-translate',
+        '--disable-wake-on-wifi',
+        '--hide-scrollbars',
+        '--ignore-gpu-blacklist',
+        '--metrics-recording-only',
+        '--mute-audio',
+        '--no-default-browser-check',
+        '--no-first-run',
+        '--no-pings',
+        '--no-zygote',
+        '--password-store=basic',
+        '--use-mock-keychain',
+        '--window-size=390,844'
       ]
     });
     
@@ -153,11 +185,21 @@ async function automateInstagramLogin(username, password) {
     // Navigate to Instagram login page with mobile parameter
     console.log('Navigating to Instagram login page (mobile mode)...');
     
+    // Add random scrolling and mouse movements to simulate human behavior
+    await page.evaluate(() => {
+      // Simulate some initial page interaction
+      window.scrollTo(0, Math.random() * 100);
+    });
+    await page.waitForTimeout(500 + Math.random() * 1000);
+    
     // Set up request interception to handle blocked requests
     await page.route('**/*', (route) => {
       const request = route.request();
-      // Continue all requests but log blocked ones
-      route.continue();
+      // Add random delays to requests to simulate human behavior
+      const delay = Math.random() * 100;
+      setTimeout(() => {
+        route.continue();
+      }, delay);
     });
     
     // Try navigation with retry logic and different strategies
@@ -374,8 +416,14 @@ async function automateInstagramLogin(username, password) {
       el.dispatchEvent(new Event('change', { bubbles: true }));
     });
     
-    // Wait for form validation
-    await page.waitForTimeout(1000);
+    // Wait for form validation with human-like behavior
+    await page.waitForTimeout(1000 + Math.random() * 1000);
+    
+    // Simulate reading the form before submitting
+    await page.evaluate(() => {
+      window.scrollTo(0, Math.random() * 100);
+    });
+    await page.waitForTimeout(500 + Math.random() * 1000);
     
     // Click login button - try multiple selectors for mobile
     console.log('Clicking login button...');
