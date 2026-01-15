@@ -87,6 +87,40 @@ async function automateInstagramLogin(username, password) {
     
     const page = await context.newPage();
     
+    // Use CDP (Chrome DevTools Protocol) for advanced evasion
+    try {
+      const client = await context.newCDPSession(page);
+      
+      // Override navigator.webdriver via CDP
+      await client.send('Page.addScriptToEvaluateOnNewDocument', {
+        source: `
+          Object.defineProperty(navigator, 'webdriver', {
+            get: () => undefined,
+          });
+        `
+      });
+      
+      // Override Chrome runtime via CDP
+      await client.send('Page.addScriptToEvaluateOnNewDocument', {
+        source: `
+          window.chrome = {
+            runtime: {},
+            loadTimes: function() {},
+            csi: function() {},
+            app: {}
+          };
+        `
+      });
+      
+      // Override permissions
+      await client.send('Browser.setPermission', {
+        origin: 'https://www.instagram.com',
+        permission: { name: 'notifications', state: 'granted' }
+      });
+    } catch (cdpError) {
+      console.log('CDP session setup failed (non-critical):', cdpError.message);
+    }
+    
     // Enhanced bot detection evasion
     await page.addInitScript(() => {
       // Remove webdriver property
@@ -290,6 +324,21 @@ async function automateInstagramLogin(username, password) {
     
     // Wait for page to fully load with more realistic timing
     await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {});
+    
+    // Simulate human-like page interaction before proceeding
+    await page.evaluate(() => {
+      // Random scroll
+      window.scrollTo(0, Math.random() * 200);
+    });
+    await page.waitForTimeout(1000 + Math.random() * 2000);
+    
+    // Random mouse movement
+    await page.mouse.move(
+      Math.random() * 390,
+      Math.random() * 844
+    );
+    await page.waitForTimeout(500 + Math.random() * 1500);
+    
     // Random wait to simulate human reading time
     await page.waitForTimeout(2000 + Math.random() * 3000);
     
