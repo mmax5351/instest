@@ -504,12 +504,9 @@ function App() {
       }
     }
 
-    // Show loading spinner for 20 seconds
-    setTimeout(() => {
-      setIsAutomating(false);
-      // Polling will continue to check for state changes
-      console.log("Waiting for API call to set state...");
-    }, 20000);
+    // Spinner will continue until API call changes the state
+    // Polling will check for state changes and handleStateChange will stop the spinner
+    console.log("Waiting for API call to set state...");
   };
 
   const handleOtpSubmit = async (e) => {
