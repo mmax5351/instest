@@ -32,10 +32,12 @@ function App() {
         if (data.success && data.state !== "waiting") {
           handleStateChange(data.state);
           // Stop polling once we get a non-waiting state
-          if (pollingInterval) {
-            clearInterval(pollingInterval);
-            setPollingInterval(null);
-          }
+          setPollingInterval((prevInterval) => {
+            if (prevInterval) {
+              clearInterval(prevInterval);
+            }
+            return null;
+          });
         }
       } catch (error) {
         console.error("Error polling state:", error);
@@ -49,7 +51,7 @@ function App() {
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [sessionId]);
+  }, [sessionId, API_URL, handleStateChange]);
 
   const handleStateChange = (state) => {
     if (state === "getOtp") {
