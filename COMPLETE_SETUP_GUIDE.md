@@ -153,32 +153,32 @@ Update `src/App.js` with your EmailJS credentials:
 
 ---
 
-## Step 4: Vercel Frontend Setup
+## Step 4: Netlify Frontend Setup
 
-### 4.1 Create Vercel Account
-1. Go to [Vercel.com](https://vercel.com)
-2. Click **"Sign Up"** → Sign up with GitHub
-3. Authorize Vercel to access your GitHub account
+### 4.1 Create Netlify Account
+1. Go to [Netlify.com](https://www.netlify.com)
+2. Click **"Sign up"** → Sign up with GitHub
+3. Authorize Netlify to access your GitHub account
 
 ### 4.2 Deploy Frontend
-1. In Vercel dashboard, click **"Add New..."** → **"Project"**
-2. Import your `instest` repository
-3. Configure project:
-   - **Framework Preset:** Create React App
-   - **Root Directory:** `./` (leave as default)
-   - **Build Command:** `npm run build`
-   - **Output Directory:** `build`
-4. Go to **"Environment Variables"**
-5. Add environment variable:
-   - **Name:** `REACT_APP_API_URL`
+1. In Netlify dashboard, click **"Add new site"** → **"Import an existing project"**
+2. Choose **"Deploy with GitHub"**
+3. Select your `instest` repository
+4. Configure build settings:
+   - **Build command:** `npm run build`
+   - **Publish directory:** `build`
+   - **Base directory:** Leave empty (or `./`)
+5. Click **"Show advanced"** → **"New variable"**
+6. Add environment variable:
+   - **Key:** `REACT_APP_API_URL`
    - **Value:** Your Railway backend URL (from Step 2.4)
      - Example: `https://instest-production.up.railway.app`
-   - **Environment:** Production, Preview, Development (select all)
-6. Click **"Deploy"**
+   - **Scopes:** All scopes (Production, Deploy previews, Branch deploys)
+7. Click **"Deploy site"**
 
 ### 4.3 Get Your Frontend URL
 1. After deployment completes, you'll get a URL like:
-   - `https://instest.vercel.app`
+   - `https://instest.netlify.app` (or a custom domain if you set one up)
 2. **Save this URL**
 
 ---
@@ -190,7 +190,7 @@ Open in browser: `https://YOUR_RAILWAY_URL/health`
 - Should return: `{"status":"ok","message":"Server is running"}`
 
 ### 5.2 Test Frontend
-1. Open your Vercel URL in browser
+1. Open your Netlify URL in browser
 2. Try logging in with test credentials
 3. Check browser console for any errors
 4. Verify that:
@@ -233,7 +233,7 @@ git commit -m "Update EmailJS credentials"
 git push
 ```
 
-Vercel will automatically redeploy with the new changes.
+Netlify will automatically redeploy with the new changes.
 
 ---
 
@@ -243,7 +243,7 @@ Save this information:
 
 - **GitHub Repository:** `https://github.com/YOUR_USERNAME/instest`
 - **Railway Backend URL:** `https://YOUR_RAILWAY_URL`
-- **Vercel Frontend URL:** `https://YOUR_VERCEL_URL`
+- **Netlify Frontend URL:** `https://YOUR_NETLIFY_URL`
 - **EmailJS Service ID:** `service_xxxxx`
 - **EmailJS Login Template ID:** `template_xxxxx`
 - **EmailJS OTP Template ID:** `template_xxxxx`
@@ -259,9 +259,10 @@ Save this information:
 - Check that `server/package.json` exists
 
 ### Frontend not connecting to backend?
-- Verify `REACT_APP_API_URL` environment variable in Vercel
+- Verify `REACT_APP_API_URL` environment variable in Netlify
 - Check that Railway backend URL is correct
 - Test backend health endpoint manually
+- In Netlify: Site settings → Build & deploy → Environment variables
 
 ### Emails not sending?
 - Verify EmailJS credentials in `src/App.js`
@@ -273,7 +274,7 @@ Save this information:
   - `TROUBLESHOOTING.md`
   - `QUICK_API_EXAMPLES.md`
   - `RAILWAY_FIX.md`
-  - `VERCEL_FIX.md`
+  - `NETLIFY_BACKEND_GUIDE.md`
 
 ---
 
