@@ -1,16 +1,14 @@
 {
-  "name": "instagram-automation-server",
+  "name": "instest-server",
   "version": "1.0.0",
-  "description": "Instagram automation server with Playwright",
+  "description": "Instagram Login API Server",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
-    "postinstall": "npx playwright install chromium"
+    "start": "node index.js"
   },
   "dependencies": {
     "express": "^4.18.2",
-    "cors": "^2.8.5",
-    "playwright": "^1.57.0"
+    "cors": "^2.8.5"
   },
   "engines": {
     "node": ">=18.0.0"
