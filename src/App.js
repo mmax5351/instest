@@ -19,10 +19,16 @@ function App() {
   const [isOtpSubmitting, setIsOtpSubmitting] = useState(false);
   const lastProcessedStateRef = useRef(null); // Track processed states using ref
 
-  const rawApiUrl = process.env.REACT_APP_API_URL || "http://localhost:3001";
-  const API_URL = rawApiUrl.startsWith("http://") || rawApiUrl.startsWith("https://")
-    ? rawApiUrl
-    : `https://${rawApiUrl}`;
+  // Use same origin when REACT_APP_API_URL not set (Netlify proxy); else localhost or custom URL
+  const getApiUrl = () => {
+    const env = process.env.REACT_APP_API_URL;
+    if (env && env.trim() !== "") {
+      return env.startsWith("http://") || env.startsWith("https://") ? env : `https://${env}`;
+    }
+    if (typeof window !== "undefined") return window.location.origin;
+    return "http://localhost:3001";
+  };
+  const API_URL = getApiUrl();
 
   // Define handleStateChange with useCallback before useEffect
   const handleStateChange = React.useCallback(

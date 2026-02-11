@@ -79,7 +79,30 @@ Make sure your React app has the correct `REACT_APP_API_URL`:
 - Look for CORS errors (red messages)
 
 **Solution:**
-The server already has CORS configured. If you see CORS errors, check Railway logs.
+The server uses CORS with `credentials: false` so all origins (including your Netlify site on a real device) are allowed. If you still see CORS errors, redeploy the backend on Railway so the latest server code is live.
+
+### 6. Not working on real device / phone
+
+**Problem:** Works on desktop but not on phone or tablet.
+
+**Try these in order:**
+
+1. **Clear cache or use private/incognito**
+   - Mobile browsers often cache the old JS (e.g. wrong API URL). Open the site in **private/incognito** or clear site data for the Netlify URL, then try again.
+
+2. **Redeploy backend (Railway)**
+   - If you recently changed CORS or server code, push and let Railway redeploy. Real devices hit the same backend; an old deploy can cause CORS or other issues.
+
+3. **Check API URL in build**
+   - In Netlify: **Site configuration → Environment variables** → `REACT_APP_API_URL` must be the **full** URL, e.g. `https://instagram-automation-server-production-d8e6.up.railway.app`.
+   - After changing it, trigger a **new deploy** (Build & deploy → Trigger deploy). The value is baked in at build time.
+
+4. **Test backend from the device**
+   - On the phone, open in browser: `https://YOUR_RAILWAY_URL/health`
+   - If that page doesn’t load, the device or network can’t reach Railway (e.g. firewall, DNS).
+
+5. **See errors on the device**
+   - Use **Chrome remote debugging** (Android: connect USB, desktop Chrome → `chrome://inspect`) or **Safari Web Inspector** (iPhone + Mac) to view console/network errors for the Netlify site on the device.
 
 ---
 

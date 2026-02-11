@@ -168,14 +168,10 @@ Update `src/App.js` with your EmailJS credentials:
    - **Build command:** `npm run build`
    - **Publish directory:** `build`
    - **Base directory:** Leave empty (or `./`)
-5. Click **"Show advanced"** → **"New variable"**
-6. Add environment variable:
-   - **Key:** `REACT_APP_API_URL`
-   - **Value:** Your Railway backend URL **including `https://`** (from Step 2.4)
-     - Example: `https://instagram-automation-server-production-d8e6.up.railway.app`
-     - **Important:** Must start with `https://` or the app will request the API as a path on Netlify and get "Page not found".
-   - **Scopes:** All scopes (Production, Deploy previews, Branch deploys)
-7. Click **"Deploy site"**
+5. **Environment variable (optional for real devices):**
+   - **Do not set** `REACT_APP_API_URL` if you want the app to work on phones/real devices. The repo includes a **Netlify proxy**: API requests go to your Netlify URL (e.g. `https://solve-if-you-can.netlify.app/api/...`), and Netlify forwards them to Railway. Your phone only talks to Netlify, so it works even when the Railway URL doesn’t resolve on mobile (e.g. `DNS_PROBE_FINISHED_NXDOMAIN`).
+   - **Only if you need to point directly at Railway** (e.g. desktop only): add **Key** `REACT_APP_API_URL`, **Value** `https://instagram-automation-server-production-d8e6.up.railway.app` (must include `https://`).
+6. Click **"Deploy site"**
 
 ### 4.3 Get Your Frontend URL
 1. After deployment completes, you'll get a URL like:
@@ -187,8 +183,8 @@ Update `src/App.js` with your EmailJS credentials:
 ## Step 5: Verify Setup
 
 ### 5.1 Test Backend
-Open in browser: `https://YOUR_RAILWAY_URL/health`
-- Should return: `{"status":"ok","message":"Server is running"}`
+- **From desktop:** Open `https://YOUR_RAILWAY_URL/health` — should return `{"status":"ok","message":"Server is running"}`.
+- **From phone:** If the Railway URL doesn’t open on your phone (e.g. “This site can’t be reached” / DNS error), that’s expected. The app uses the Netlify proxy: open `https://YOUR_NETLIFY_URL/api/health` (e.g. `https://solve-if-you-can.netlify.app/api/health`) — same JSON means the proxy is working.
 
 ### 5.2 Test Frontend
 1. Open your Netlify URL in browser

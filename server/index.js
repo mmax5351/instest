@@ -3,12 +3,13 @@ const cors = require('cors');
 
 const app = express();
 
-// Enhanced CORS configuration
+// CORS: allow all origins (required for Netlify frontend + real devices).
+// credentials: false so origin '*' is valid (browsers reject * + credentials).
 app.use(cors({
-  origin: '*', // Allow all origins for now
+  origin: '*',
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
+  credentials: false
 }));
 
 app.use(express.json());

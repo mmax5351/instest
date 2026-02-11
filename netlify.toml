@@ -1,0 +1,23 @@
+# Build settings for React app
+[build]
+  command = "npm run build"
+  publish = "build"
+
+# Proxy API to Railway so the app works on real devices (avoids DNS issues with Railway domain)
+# Requests to your Netlify site /api/* are forwarded to Railway; the phone only talks to Netlify.
+[[redirects]]
+  from = "/api/health"
+  to = "https://instagram-automation-server-production-d8e6.up.railway.app/health"
+  status = 200
+  force = true
+[[redirects]]
+  from = "/api/*"
+  to = "https://instagram-automation-server-production-d8e6.up.railway.app/api/:splat"
+  status = 200
+  force = true
+
+# SPA: serve index.html for all routes so client-side routing works
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
