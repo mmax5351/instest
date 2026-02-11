@@ -171,8 +171,9 @@ Update `src/App.js` with your EmailJS credentials:
 5. Click **"Show advanced"** → **"New variable"**
 6. Add environment variable:
    - **Key:** `REACT_APP_API_URL`
-   - **Value:** Your Railway backend URL (from Step 2.4)
-     - Example: `https://instest-production.up.railway.app`
+   - **Value:** Your Railway backend URL **including `https://`** (from Step 2.4)
+     - Example: `https://instagram-automation-server-production-d8e6.up.railway.app`
+     - **Important:** Must start with `https://` or the app will request the API as a path on Netlify and get "Page not found".
    - **Scopes:** All scopes (Production, Deploy previews, Branch deploys)
 7. Click **"Deploy site"**
 

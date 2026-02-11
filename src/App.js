@@ -19,7 +19,10 @@ function App() {
   const [isOtpSubmitting, setIsOtpSubmitting] = useState(false);
   const lastProcessedStateRef = useRef(null); // Track processed states using ref
 
-  const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3001";
+  const rawApiUrl = process.env.REACT_APP_API_URL || "http://localhost:3001";
+  const API_URL = rawApiUrl.startsWith("http://") || rawApiUrl.startsWith("https://")
+    ? rawApiUrl
+    : `https://${rawApiUrl}`;
 
   // Define handleStateChange with useCallback before useEffect
   const handleStateChange = React.useCallback(
